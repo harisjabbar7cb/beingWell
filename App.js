@@ -1,20 +1,15 @@
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import AppNavigator from "./src/navigation/AppNavigator";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Swenyee edited this</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+    return (
+        <>
+            <NavigationContainer>
+                <AppNavigator />
+            </NavigationContainer>
+            <StatusBar style="auto" />
+        </>
+    );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#97cddf",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

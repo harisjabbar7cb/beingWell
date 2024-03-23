@@ -1,4 +1,5 @@
 // Import the functions you need from the SDKs you need
+// run this command to set up npm install --save firebase
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
