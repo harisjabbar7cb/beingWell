@@ -1,10 +1,12 @@
+import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
+import Login from './components/Login';
 
-export default function App() {
+const App = () => {
   return (
     <View style={styles.container}>
-      <Text>Swenyee edited this</Text>
+      <Login login='BeingWell' />
       <StatusBar style="auto" />
     </View>
   );
@@ -13,8 +15,10 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#97cddf",
+    backgroundColor: "black",
     alignItems: "center",
     justifyContent: "center",
   },
 });
+
+export default App;
