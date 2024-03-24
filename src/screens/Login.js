@@ -2,11 +2,23 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
-import { signInWithEmailAndPassword, getAuth } from "firebase/auth";
+import { initializeApp } from 'firebase/app';
+import { getAuth, initializeAuth, getReactNativePersistence, signInWithEmailAndPassword } from "firebase/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth } from '../firebaseConfig';
+import {firebaseConfig} from '../firebaseConfig';
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
+// Initialize Firebase Auth with persistence to allow reentry
+let auth;
+try {
+    auth = getAuth(app); // Attempt to get the existing auth instance
+} catch {
+    auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage)
+    });
+}
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -39,8 +51,20 @@ const Login = () => {
                 navigation.navigate('UserDashboard');
             }
         } catch (error) {
-            Alert.alert("Invalid Username or Password try again");
+            let errorMessage;
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    errorMessage = "No user found with this email.";
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = "Incorrect password. Please try again.";
+                    break;
+                default:
+                    errorMessage = "Incorrect Username or Password. Please try again";
+            }
+            Alert.alert(errorMessage);
         }
+
     };
 
 

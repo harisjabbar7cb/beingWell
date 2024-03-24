@@ -20,9 +20,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-<<<<<<<< Updated upstream:firebaseConfig
-export { app };
-========
 const auth = getAuth(app);
-export { app,auth };
->>>>>>>> Stashed changes:src/firebaseConfig.js
+export { app,auth, analytics, firebaseConfig};
+
