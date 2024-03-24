@@ -6,6 +6,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence, signInWithEmailAndPassword } from "firebase/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {firebaseConfig} from '../firebaseConfig';
+import {Image} from 'react-native';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -104,7 +105,12 @@ const Login = () => {
             <AnimatedTouchableOpacity onPress={login} style={[styles.button, animatedButtonStyle]}>
                 <Text style={styles.buttonText}>Login</Text>
             </AnimatedTouchableOpacity>
+            <Image
+                source={require('../image/login.png')} // Adjust the path as needed
+                style={styles.loginImage}
+            />
         </View>
+
     );
 };
 
@@ -113,16 +119,16 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#ffffff",
+        backgroundColor: "#F5EEE6",
         alignItems: "center",
         justifyContent: "center",
     },
     title: {
         fontSize: 50,
         marginBottom: 30,
-        color: "#000000",
-
+        color: "#5264af",
         fontWeight: "bold",
+        paddingTop:25
     },
     input: {
         height: 50,
@@ -131,15 +137,15 @@ const styles = StyleSheet.create({
         padding: 10,
         width: 300,
         borderRadius: 5,
-        borderColor: "#F0F0F0",
+        borderColor: "#FFF8E3",
         color: "#000000",
-        backgroundColor: "#F0F0F0",
+        backgroundColor: "#FFF8E3",
     },
     inputFocused: {
-        borderColor: "#000000",
+        borderColor: "#F3D7CA",
     },
     button: {
-        backgroundColor: "#000000",
+        backgroundColor: "#C3ACD0",
         padding: 15,
         borderRadius: 5,
         width: 150,
@@ -153,10 +159,18 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+
     },
     buttonText: {
-        color: "#ffffff",
-        fontSize: 16,
+        color:"#FFF8E3",
+        fontSize: 18,
+
+    },
+    loginImage: {
+        width: '100%',
+        height: 300,
+        resizeMode: 'contain',
+        marginTop:30
 
     },
 });
