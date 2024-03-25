@@ -14,6 +14,10 @@ const HealthData = ({ navigation }) => {
         title="View Your Step Data"
         onPress={() => navigation.navigate("StepData")}
       />
+      <Button
+        title="View Your Sleep Data"
+        onPress={() => navigation.navigate("SleepData")}
+      />
     </View>
   );
 };
