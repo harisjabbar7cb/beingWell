@@ -1,18 +1,15 @@
-// HealthData.js
+// StepDATA.js
 import React from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
 
-const HealthData = ({ navigation }) => {
+const StepData = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Health data</Text>
+      <Text style={styles.text}>Step Data</Text>
+      <Text>hahahehetesting</Text>
       <Button
-        title="Back to Dashboard"
-        onPress={() => navigation.navigate("UserDashboard")}
-      />
-      <Button
-        title="View Your Step Data"
-        onPress={() => navigation.navigate("StepData")}
+        title="Go to Health Data"
+        onPress={() => navigation.navigate("HealthData")}
       />
     </View>
   );
@@ -23,6 +20,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#fff",
   },
   text: {
     fontSize: 20,
@@ -30,4 +28,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HealthData;
+export default StepData;
