@@ -7,16 +7,16 @@ const HealthData = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.text}>Health data</Text>
       <Button
-        title="Back to Dashboard"
-        onPress={() => navigation.navigate("UserDashboard")}
-      />
-      <Button
         title="View Your Step Data"
         onPress={() => navigation.navigate("StepData")}
       />
       <Button
         title="View Your Sleep Data"
         onPress={() => navigation.navigate("SleepData")}
+      />
+      <Button
+        title="Back to Dashboard"
+        onPress={() => navigation.navigate("UserDashboard")}
       />
     </View>
   );
