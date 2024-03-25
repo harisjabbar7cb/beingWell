@@ -6,7 +6,7 @@ const StepData = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Step Data</Text>
-      <Text>hahahehetesting</Text>
+      <Text>adding test </Text>
       <Button
         title="Go to Health Data"
         onPress={() => navigation.navigate("HealthData")}
