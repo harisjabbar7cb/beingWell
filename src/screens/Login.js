@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {firebaseConfig} from '../firebaseConfig';
 import {Image} from 'react-native';
 
-// Initialize Firebase
+// Initialize Firebaseadmin
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase Auth with persistence to allow reentry

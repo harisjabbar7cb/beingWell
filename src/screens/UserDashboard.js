@@ -22,6 +22,10 @@ const UserDashboard = ({ navigation }) => {
                 title="Go to login"
                 onPress={() => navigation.navigate('Login')}
             />
+            <Button
+                title="Go to booking"
+                onPress={() => navigation.navigate('bookingScreen')}
+            />
 
         </View>
     );
