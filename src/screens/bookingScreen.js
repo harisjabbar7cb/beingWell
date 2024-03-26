@@ -2,39 +2,80 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
+import { getFirestore, collection, doc, getDocs } from 'firebase/firestore';
+import { app } from '../firebaseConfig'; // Make sure this path is correct
+
+const db = getFirestore(app);
 
 const BookingScreen = () => {
     const [selectedDate, setSelectedDate] = useState('');
     const [availableTimes, setAvailableTimes] = useState([]);
-    const [selectedTime, setSelectedTime] = useState(null);
+    const [selectedTime, setSelectedTime] = useState('');
+    const [markedDates, setMarkedDates] = useState({});
     const navigation = useNavigation();
 
-    // Placeholder for marked dates
-    const [markedDates, setMarkedDates] = useState({});
-
     useEffect(() => {
-        const fetchAvailableDates = async () => {
-            const fetchedData = {
-                '2024-03-20': { available: true, marked: true },
+        const fetchDatesAndTimes = async () => {
+            const datesCollectionRef = collection(db, 'available_dates');
+            const datesSnapshot = await getDocs(datesCollectionRef);
+            const newMarkedDates = {};
 
-            };
-            setMarkedDates(fetchedData);
+            for (const doc of datesSnapshot.docs) {
+                const date = doc.id;
+                const timesCollectionRef = collection(doc.ref, 'times');
+                const timesSnapshot = await getDocs(timesCollectionRef);
+                const times = timesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Mark dates without available times as disabled
+                const hasAvailableTimes = times.some(time => time.available);
+                newMarkedDates[date] = {
+                    disabled: !hasAvailableTimes,
+                    disableTouchEvent: !hasAvailableTimes,
+                    marked: hasAvailableTimes,
+                    selectedColor: hasAvailableTimes ? 'blue' : 'gray',
+                };
+            }
+
+            setMarkedDates(newMarkedDates);
         };
-        fetchAvailableDates();
+
+        fetchDatesAndTimes();
     }, []);
 
     useEffect(() => {
-        if (selectedDate) {
-            const times = ['9:00', '10:00', '11:00', '12:00', '1:00', '2:00', '3:00', '4:00'];
-            setAvailableTimes(times);
-        }
+        if (!selectedDate) return;
+
+        const fetchAvailableTimes = async () => {
+            try {
+                const dateDocRef = doc(db, 'available_dates', selectedDate);
+                const timesCollectionRef = collection(dateDocRef, 'times');
+                const snapshot = await getDocs(timesCollectionRef);
+
+                const times = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                setAvailableTimes(times.filter(time => time.available));
+                setSelectedTime(''); 
+            } catch (error) {
+                console.error('Error fetching available times:', error);
+            }
+        };
+
+        fetchAvailableTimes();
     }, [selectedDate]);
 
-    const renderTimeSlot = ({ item, index }) => (
+    const renderTimeSlot = ({ item }) => (
         <TouchableOpacity
-            style={[styles.timeSlot, item === selectedTime && styles.selectedTimeSlot]}
-            onPress={() => setSelectedTime(item)}>
-            <Text style={styles.timeText}>{item}</Text>
+            style={[
+                styles.timeSlot,
+                item.id === selectedTime ? styles.selectedTimeSlot : {},
+            ]}
+            onPress={() => setSelectedTime(item.id)}
+            disabled={!item.available}
+        >
+            <Text style={styles.timeText}>{item.id}</Text>
         </TouchableOpacity>
     );
 
@@ -42,26 +83,32 @@ const BookingScreen = () => {
         <View style={styles.container}>
             <Text style={styles.title}>Book an Appointment</Text>
             <Calendar
-                // Calendar configuration...
                 onDayPress={(day) => {
+                    if (markedDates[day.dateString]?.disabled) {
+                        console.log('No available times for this date');
+                        return;
+                    }
                     setSelectedDate(day.dateString);
-                    setSelectedTime(null);
                 }}
                 markedDates={{
                     ...markedDates,
-                    [selectedDate]: { selected: true, marked: true },
+                    [selectedDate]: { ...markedDates[selectedDate], selected: true },
                 }}
             />
             <FlatList
                 data={availableTimes}
                 renderItem={renderTimeSlot}
-                keyExtractor={(item, index) => index.toString()}
+                keyExtractor={(item) => item.id}
                 numColumns={4}
                 style={styles.timesGrid}
             />
             <TouchableOpacity
                 style={[styles.button, { opacity: selectedTime ? 1 : 0.5 }]}
-                onPress={() => selectedTime && navigation.navigate('BookingSuccess', { date: selectedDate, time: selectedTime })}
+                onPress={() => {
+                    if (selectedTime) {
+                        navigation.navigate('BookingSuccess', { date: selectedDate, time: selectedTime });
+                    }
+                }}
                 disabled={!selectedTime}
             >
                 <Text style={styles.buttonText}>Confirm Appointment</Text>
@@ -73,22 +120,22 @@ const BookingScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F5EEE6",
-        alignItems: "center",
-        justifyContent: "space-around",
+        backgroundColor: '#F5EEE6',
+        alignItems: 'center',
+        justifyContent: 'space-around',
     },
     title: {
         fontSize: 30,
-        color: "#5264af",
-        fontWeight: "bold",
-        paddingTop:10,
+        color: '#5264af',
+        fontWeight: 'bold',
+        paddingTop: 10,
     },
     timesGrid: {
         marginTop: 20,
         maxHeight: 200,
     },
     timeSlot: {
-        backgroundColor: "#C3ACD0",
+        backgroundColor: '#C3ACD0',
         borderRadius: 5,
         padding: 10,
         margin: 5,
@@ -96,26 +143,28 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    unavailableTimeSlot: {
+        backgroundColor: '#CCCCCC',
+    },
     selectedTimeSlot: {
-        backgroundColor: "#A084CA",
+        backgroundColor: '#A084CA',
     },
     timeText: {
-        color: "#FFF8E3",
+        color: '#FFF8E3',
         fontSize: 16,
     },
     button: {
-        backgroundColor: "#C3ACD0",
+        backgroundColor: '#C3ACD0',
         padding: 15,
         borderRadius: 5,
         width: 200,
-        alignItems: "center",
+        alignItems: 'center',
         marginTop: 20,
-
     },
     buttonText: {
-        color: "#FFF8E3",
+        color: '#FFF8E3',
         fontSize: 18,
-        textAlign: "center"
+        textAlign: 'center',
     },
 });
 
