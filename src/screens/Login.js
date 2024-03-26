@@ -7,9 +7,11 @@ import { getAuth, initializeAuth, getReactNativePersistence, signInWithEmailAndP
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {firebaseConfig} from '../firebaseConfig';
 import {Image} from 'react-native';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
 // Initialize Firebaseadmin
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 // Initialize Firebase Auth with persistence to allow reentry
 let auth;
@@ -36,16 +38,26 @@ const Login = () => {
         }
     };
 
-
-
-
     const login = async () => {
         try {
             const userCredential = await signInWithEmailAndPassword(auth, username, password);
             const user = userCredential.user;
             // Store user UID for later use in DB syncing
             await storeUID(user.uid);
-            //Switch if admin or user
+
+            // Fetch user information
+            const usersCollectionRef = collection(db, 'users');
+            const userQuerySnapshot = await getDocs(query(usersCollectionRef, where('email', '==', username)));
+
+            if (!userQuerySnapshot.empty) {
+                const userDocSnapshot = userQuerySnapshot.docs[0];
+                console.log("User Details: ", userDocSnapshot.data());
+                // Add logic here to store user details as needed
+            } else {
+                console.log("No user details found!");
+            }
+
+            // Navigate based on user role
             if (username === 'admin@fdm.com') {
                 navigation.navigate('AdminDashboard');
             } else {
@@ -61,15 +73,11 @@ const Login = () => {
                     errorMessage = "Incorrect password. Please try again.";
                     break;
                 default:
-                    errorMessage = "Incorrect Username or Password. Please try again";
+                    errorMessage = "Login failed. Please try again.";
             }
             Alert.alert(errorMessage);
         }
-
     };
-
-
-
 
     const animatedButtonStyle = useAnimatedStyle(() => {
         return {

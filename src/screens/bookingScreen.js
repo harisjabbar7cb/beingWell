@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList,Alert} from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
-import { getFirestore, collection, doc, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDocs, setDoc} from 'firebase/firestore';
 import { app } from '../firebaseConfig'; // Make sure this path is correct
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const db = getFirestore(app);
 
 const BookingScreen = () => {
@@ -57,7 +57,7 @@ const BookingScreen = () => {
                 }));
 
                 setAvailableTimes(times.filter(time => time.available));
-                setSelectedTime(''); 
+                setSelectedTime('');
             } catch (error) {
                 console.error('Error fetching available times:', error);
             }
@@ -65,6 +65,35 @@ const BookingScreen = () => {
 
         fetchAvailableTimes();
     }, [selectedDate]);
+    const bookAppointment = async () => {
+        try {
+            const uid = await AsyncStorage.getItem('userUID');
+            // Optional: Fetch the user's name if needed
+            // const userName = await AsyncStorage.getItem('userName');
+
+            if (!uid) {
+                Alert.alert("Error", "User not identified.");
+                return;
+            }
+
+            const appointmentDetails = {
+                date: selectedDate,
+                time: selectedTime,
+                uid: uid,
+                // userName: userName, // Uncomment if using userName
+            };
+
+            // Create a new appointment document in 'appointments' collection
+            const newAppointmentRef = doc(collection(db, 'appointments'));
+            await setDoc(newAppointmentRef, appointmentDetails);
+
+            Alert.alert("Success", "Your appointment has been booked.");
+            navigation.navigate('BookingSuccess', { date: selectedDate, time: selectedTime }); // Navigate or update state as needed
+        } catch (error) {
+            console.error('Error booking the appointment:', error);
+            Alert.alert("Error", "Could not book the appointment. Please try again.");
+        }
+    };
 
     const renderTimeSlot = ({ item }) => (
         <TouchableOpacity
@@ -106,7 +135,7 @@ const BookingScreen = () => {
                 style={[styles.button, { opacity: selectedTime ? 1 : 0.5 }]}
                 onPress={() => {
                     if (selectedTime) {
-                        navigation.navigate('BookingSuccess', { date: selectedDate, time: selectedTime });
+                        navigation.navigate('BookingSuccess', { date: selectedDate, time: selectedTime }), bookAppointment();
                     }
                 }}
                 disabled={!selectedTime}
