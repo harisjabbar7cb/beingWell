@@ -81,6 +81,7 @@ const styles = StyleSheet.create({
         fontSize: 30,
         color: "#5264af",
         fontWeight: "bold",
+        paddingTop:10,
     },
     timesGrid: {
         marginTop: 20,

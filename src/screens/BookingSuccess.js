@@ -24,7 +24,10 @@ const BookingSuccessPage = ({ route }) => {
 
             <TouchableOpacity
                 style={styles.returnButton}
-                onPress={() => navigation.navigate('UserDashboard')}
+                onPress={() => navigation.navigate('UserDashboard', {
+                    screen: 'Dashboard',
+                })}
+
             >
                 <Text style={styles.returnButtonText}>Return to Dashboard</Text>
             </TouchableOpacity>

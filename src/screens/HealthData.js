@@ -16,7 +16,9 @@ const HealthData = ({ navigation }) => {
       />
       <Button
         title="Back to Dashboard"
-        onPress={() => navigation.navigate("UserDashboard")}
+        onPress={() => navigation.navigate('UserDashboard', {
+            screen: 'Dashboard',
+        })}
       />
     </View>
   );

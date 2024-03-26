@@ -8,6 +8,7 @@ import bookingScreen from '../screens/bookingScreen';
 import BookingSuccess from '../screens/BookingSuccess';
 import SleepData from "../screens/SleepData";
 import StepData from "../screens/StepData";
+import mainMenu from "../screens/mainMenu";
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +23,7 @@ const AppNavigator = () => {
             <Stack.Screen name="BookingSuccess" component={BookingSuccess}/>
             <Stack.Screen name="SleepData" component={SleepData}/>
             <Stack.Screen name="StepData" component={StepData}/>
+            <Stack.Screen name="Menu" component={mainMenu}/>
         </Stack.Navigator>
     );
 };
