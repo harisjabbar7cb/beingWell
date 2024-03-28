@@ -1,13 +1,21 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, FlatList } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-const WidgetButton = ({ icon, title }) => (
-    <TouchableOpacity style={styles.widget}>
+const WidgetButton = ({ icon, title, onPress }) => (
+    <TouchableOpacity style={styles.widget} onPress={onPress}>
         <FontAwesome5 name={icon} size={24} color="#5264af" style={styles.icon} />
         <Text style={styles.widgetText}>{title}</Text>
     </TouchableOpacity>
 );
+
+const ModuleItem = ({ title, summary }) => (
+    <View style={styles.moduleItem}>
+        <Text style={styles.moduleTitle}>{title}</Text>
+        <Text style={styles.moduleSummary}>{summary}</Text>
+    </View>
+);
+
 const MODULES_DATA = [
     {
         id: '1',
@@ -19,35 +27,66 @@ const MODULES_DATA = [
         title: 'Benefits of Regular Exercise',
         summary: 'Discover how regular exercise can improve your overall health.',
     },
-    {
-        id: '3',
-        title: 'Sleep Hygiene',
-        summary: 'Find out how better sleep can significantly improve your health.',
-    },
+
 ];
 
-const ModuleItem = ({ title, summary }) => (
-    <View style={styles.moduleItem}>
-        <Text style={styles.moduleTitle}>{title}</Text>
-        <Text style={styles.moduleSummary}>{summary}</Text>
-    </View>
-);
 const UserDashboard = ({ navigation }) => {
+    const [waterIntake, setWaterIntake] = useState(0);
+    const [calorieInput, setCalorieInput] = useState('');
+    const [totalCalories, setTotalCalories] = useState(0);
+
+    const incrementWaterIntake = () => {
+        if (waterIntake >= 15) {
+            Alert.alert("Warning", "You are at risk of overhydration!");
+
+        }
+        setWaterIntake(waterIntake + 1);
+    };
+
+    const handleAddCalories = () => {
+        const inputCalories = parseInt(calorieInput, 10);
+        if (isNaN(inputCalories) || inputCalories > 10000 || inputCalories < 0) {
+            Alert.alert("Invalid Input", "Please enter a number between 0 and 10,000.");
+            return;
+        }
+        setTotalCalories(totalCalories + inputCalories);
+        setCalorieInput('');
+    };
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>BeingWell</Text>
             <View style={styles.widgetsContainer}>
-                <WidgetButton icon="tint" title="Water Intake" />
-                <WidgetButton icon="utensils" title="Food Tracking" />
-                <WidgetButton icon="bed" title="Sleep Monitor" />
-                <WidgetButton icon="walking" title="Steps Count" />
-                <FlatList
-                    data={MODULES_DATA}
-                    renderItem={({ item }) => <ModuleItem title={item.title} summary={item.summary} />}
-                    keyExtractor={item => item.id}
-                    style={styles.modulesList}
-                />
+                <View style={styles.trackerContainer}>
+                    <Text style={styles.trackerText}>Water Intake: {waterIntake}</Text>
+                    <TouchableOpacity onPress={incrementWaterIntake}>
+                        <FontAwesome5 name="plus" size={24} color="#5264af" />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.trackerContainer}>
+                    <Text style={styles.trackerText}>Total Calories: {totalCalories}</Text>
+                    <TextInput
+                        style={styles.calorieInput}
+                        placeholder="Add..."
+                        keyboardType="numeric"
+                        value={calorieInput}
+                        onChangeText={setCalorieInput}
+                        maxLength={5}
+                    />
+                    <TouchableOpacity onPress={handleAddCalories}>
+                        <FontAwesome5 name="plus" size={24} color="#5264af" />
+                    </TouchableOpacity>
+                </View>
+                <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')} />
+                <WidgetButton icon="book" title="Your Journal" onPress={() => navigation.navigate('journal')}/>
+                <WidgetButton icon="newspaper" title="Forum" />
             </View>
+            <FlatList
+                data={MODULES_DATA}
+                renderItem={({ item }) => <ModuleItem title={item.title} summary={item.summary} />}
+                keyExtractor={item => item.id}
+                style={styles.modulesList}
+            />
         </View>
     );
 };
@@ -113,6 +152,30 @@ const styles = StyleSheet.create({
     moduleSummary: {
         fontSize: 16,
         color: '#000',
+    },
+    trackerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: "#FFF",
+        padding: 20,
+        marginHorizontal: 20,
+        marginTop: 15,
+    },
+    trackerText: {
+        fontSize: 18,
+        color: '#5264af',
+        fontWeight: '600',
+    },
+    calorieInput: {
+        borderWidth: 1,
+        borderColor: '#5264af',
+        padding: 10,
+        marginRight: 10,
+        width: 100,
+    },
+    addButton: {
+        padding: 10,
     },
 });
 

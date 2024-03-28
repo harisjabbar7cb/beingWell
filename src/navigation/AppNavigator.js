@@ -9,6 +9,8 @@ import BookingSuccess from '../screens/BookingSuccess';
 import SleepData from "../screens/SleepData";
 import StepData from "../screens/StepData";
 import mainMenu from "../screens/mainMenu";
+import bmi from "../screens/bmi"
+import journal from "../screens/journal"
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +26,8 @@ const AppNavigator = () => {
             <Stack.Screen name="SleepData" component={SleepData}/>
             <Stack.Screen name="StepData" component={StepData}/>
             <Stack.Screen name="Menu" component={mainMenu}/>
+            <Stack.Screen name="bmi" component={bmi}/>
+            <Stack.Screen name="journal" component={journal}/>
         </Stack.Navigator>
     );
 };
