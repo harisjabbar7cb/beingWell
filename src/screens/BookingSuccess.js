@@ -9,12 +9,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const db = getFirestore(app);
 
 const BookingSuccessPage = ({ route }) => {
-    const { date, time, bookingId } = route.params; // Assuming bookingId is passed
+    const { date, time, bookingId } = route.params;
     const navigation = useNavigation();
 
     const cancelBooking = async () => {
         try {
-            const uid = await AsyncStorage.getItem('userUID'); // Assuming you store user UID
+            const uid = await AsyncStorage.getItem('userUID');
             if (!uid) {
                 Alert.alert("Error", "User not identified.");
                 return;
@@ -30,7 +30,7 @@ const BookingSuccessPage = ({ route }) => {
                 return;
             }
 
-            // Assuming each user can only have one booking per time slot, delete the found booking
+
             querySnapshot.forEach(async (document) => {
                 await deleteDoc(doc(db, "appointments", document.id));
             });
@@ -70,7 +70,7 @@ const BookingSuccessPage = ({ route }) => {
             </TouchableOpacity>
 
             <TouchableOpacity
-                style={[styles.returnButton, styles.cancelButton]} // Apply additional cancel button styling
+                style={[styles.returnButton, styles.cancelButton]}
                 onPress={cancelBooking}
             >
                 <Text style={styles.returnButtonText}>Cancel Booking</Text>
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
         color: '#5264af',
     },
     cancelButton: {
-        backgroundColor: '#D9534F', // A common red color for a cancel or delete button
+        backgroundColor: '#D9534F',
         marginTop: 10,
     },
 
