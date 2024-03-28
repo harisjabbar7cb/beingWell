@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import BookingScreen from './bookingScreen';
 import HealthDataScreen from './HealthData';
 import MainMenuScreen from './mainMenu';
-import LoginScreen from './Login';
+import logout from "./logout";
 
 
 
@@ -27,7 +27,7 @@ const UserDashboardTabNavigator = () => (
                     case 'HealthData':
                         iconName = focused ? 'bar-chart' : 'bar-chart-outline';
                         break;
-                    case 'Login':
+                    case 'Logout':
                         iconName = focused ? 'person' : 'person-outline';
                         break;
                     default:
@@ -44,7 +44,7 @@ const UserDashboardTabNavigator = () => (
         <Tab.Screen name="Dashboard" component={MainMenuScreen} />
         <Tab.Screen name="Booking" component={BookingScreen} />
         <Tab.Screen name="HealthData" component={HealthDataScreen} />
-        <Tab.Screen name="Login" component={LoginScreen} />
+        <Tab.Screen name="Logout" component={logout} />
     </Tab.Navigator>
 );
 
