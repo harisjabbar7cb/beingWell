@@ -79,7 +79,7 @@ const UserDashboard = ({ navigation }) => {
                 </View>
                 <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')} />
                 <WidgetButton icon="book" title="Your Journal" onPress={() => navigation.navigate('journal')}/>
-                <WidgetButton icon="newspaper" title="Forum" />
+                <WidgetButton icon="newspaper" title="Forum"  onPress={() => navigation.navigate('forum')} />
             </View>
             <FlatList
                 data={MODULES_DATA}
