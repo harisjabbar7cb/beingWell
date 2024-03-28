@@ -1,17 +1,55 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getFirestore, doc, deleteDoc, collection,query,where,getDocs} from 'firebase/firestore';
+import { app } from '../firebaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
+const db = getFirestore(app);
 
 const BookingSuccessPage = ({ route }) => {
-    const { date, time } = route.params;
+    const { date, time, bookingId } = route.params; // Assuming bookingId is passed
     const navigation = useNavigation();
+
+    const cancelBooking = async () => {
+        try {
+            const uid = await AsyncStorage.getItem('userUID'); // Assuming you store user UID
+            if (!uid) {
+                Alert.alert("Error", "User not identified.");
+                return;
+            }
+
+            // Query for the booking document
+            const bookingsRef = collection(db, "appointments");
+            const q = query(bookingsRef, where("date", "==", date), where("time", "==", time), where("uid", "==", uid));
+
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                Alert.alert("Not Found", "No matching booking found.");
+                return;
+            }
+
+            // Assuming each user can only have one booking per time slot, delete the found booking
+            querySnapshot.forEach(async (document) => {
+                await deleteDoc(doc(db, "appointments", document.id));
+            });
+
+            Alert.alert("Booking Cancelled", "Your booking has been successfully cancelled.", [
+                { text: "OK", onPress: () => navigation.navigate('UserDashboard', { screen: 'Dashboard' }) }
+            ]);
+        } catch (error) {
+            console.error("Error cancelling booking:", error);
+            Alert.alert("Error", "Could not cancel the booking. Please try again.");
+        }
+    };
 
     return (
         <View style={styles.container}>
             <Text style={styles.headerText}>Your Booking</Text>
 
             <Image style={styles.bookingImage}
-                source={require('../image/booking.png')}
+                   source={require('../image/booking.png')}
             />
 
             <View style={styles.infoBox}>
@@ -27,9 +65,15 @@ const BookingSuccessPage = ({ route }) => {
                 onPress={() => navigation.navigate('UserDashboard', {
                     screen: 'Dashboard',
                 })}
-
             >
                 <Text style={styles.returnButtonText}>Return to Dashboard</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[styles.returnButton, styles.cancelButton]} // Apply additional cancel button styling
+                onPress={cancelBooking}
+            >
+                <Text style={styles.returnButtonText}>Cancel Booking</Text>
             </TouchableOpacity>
         </View>
     );
@@ -48,6 +92,11 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         color: '#5264af',
     },
+    cancelButton: {
+        backgroundColor: '#D9534F', // A common red color for a cancel or delete button
+        marginTop: 10,
+    },
+
     bookingImage: {
         width: 250,
         height: 250,

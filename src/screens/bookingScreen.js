@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList,Alert} from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { useNavigation } from '@react-navigation/native';
-import { getFirestore, collection, doc, getDocs, setDoc} from 'firebase/firestore';
-import { app } from '../firebaseConfig'; // Make sure this path is correct
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { getFirestore, collection, doc, getDocs, setDoc, query, where, updateDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { app } from '../firebaseConfig';
 const db = getFirestore(app);
 
 const BookingScreen = () => {
@@ -19,14 +19,11 @@ const BookingScreen = () => {
             const datesCollectionRef = collection(db, 'available_dates');
             const datesSnapshot = await getDocs(datesCollectionRef);
             const newMarkedDates = {};
-
             for (const doc of datesSnapshot.docs) {
                 const date = doc.id;
                 const timesCollectionRef = collection(doc.ref, 'times');
                 const timesSnapshot = await getDocs(timesCollectionRef);
                 const times = timesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                // Mark dates without available times as disabled
                 const hasAvailableTimes = times.some(time => time.available);
                 newMarkedDates[date] = {
                     disabled: !hasAvailableTimes,
@@ -35,60 +32,60 @@ const BookingScreen = () => {
                     selectedColor: hasAvailableTimes ? 'blue' : 'gray',
                 };
             }
-
             setMarkedDates(newMarkedDates);
         };
-
         fetchDatesAndTimes();
     }, []);
 
     useEffect(() => {
         if (!selectedDate) return;
-
         const fetchAvailableTimes = async () => {
-            try {
-                const dateDocRef = doc(db, 'available_dates', selectedDate);
-                const timesCollectionRef = collection(dateDocRef, 'times');
-                const snapshot = await getDocs(timesCollectionRef);
-
-                const times = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
-                setAvailableTimes(times.filter(time => time.available));
-                setSelectedTime('');
-            } catch (error) {
-                console.error('Error fetching available times:', error);
-            }
+            const dateDocRef = doc(db, 'available_dates', selectedDate);
+            const timesCollectionRef = collection(dateDocRef, 'times');
+            const snapshot = await getDocs(timesCollectionRef);
+            const times = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setAvailableTimes(times.filter(time => time.available));
+            setSelectedTime('');
         };
-
         fetchAvailableTimes();
     }, [selectedDate]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const checkExistingAppointment = async () => {
+                const uid = await AsyncStorage.getItem('userUID');
+                if (uid) {
+                    const q = query(collection(db, "appointments"), where("uid", "==", uid));
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) {
+                        const appointment = querySnapshot.docs[0].data();
+                        navigation.navigate('BookingSuccess', { date: appointment.date, time: appointment.time });
+                        return; // Stop execution if an appointment is found
+                    }
+                }
+            };
+            checkExistingAppointment();
+        }, [navigation])
+    );
+
     const bookAppointment = async () => {
         try {
             const uid = await AsyncStorage.getItem('userUID');
-            // Optional: Fetch the user's name if needed
-            // const userName = await AsyncStorage.getItem('userName');
-
             if (!uid) {
                 Alert.alert("Error", "User not identified.");
                 return;
             }
-
             const appointmentDetails = {
                 date: selectedDate,
                 time: selectedTime,
                 uid: uid,
-                // userName: userName, // Uncomment if using userName
             };
-
-            // Create a new appointment document in 'appointments' collection
             const newAppointmentRef = doc(collection(db, 'appointments'));
             await setDoc(newAppointmentRef, appointmentDetails);
-
+            const timeSlotRef = doc(db, 'available_dates', selectedDate, 'times', selectedTime);
+            await updateDoc(timeSlotRef, { available: false });
             Alert.alert("Success", "Your appointment has been booked.");
-            navigation.navigate('BookingSuccess', { date: selectedDate, time: selectedTime }); // Navigate or update state as needed
+            navigation.navigate('BookingSuccess', { date: selectedDate, time: selectedTime });
         } catch (error) {
             console.error('Error booking the appointment:', error);
             Alert.alert("Error", "Could not book the appointment. Please try again.");
@@ -135,7 +132,7 @@ const BookingScreen = () => {
                 style={[styles.button, { opacity: selectedTime ? 1 : 0.5 }]}
                 onPress={() => {
                     if (selectedTime) {
-                        navigation.navigate('BookingSuccess', { date: selectedDate, time: selectedTime }), bookAppointment();
+                        bookAppointment();
                     }
                 }}
                 disabled={!selectedTime}
@@ -145,6 +142,8 @@ const BookingScreen = () => {
         </View>
     );
 };
+
+
 
 const styles = StyleSheet.create({
     container: {
