@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, query, onSnapshot, addDoc, Timestamp, doc, setDoc } from 'firebase/firestore';
-import { deleteDoc } from 'firebase/firestore';
-
+import { getFirestore, collection, query, onSnapshot, addDoc, Timestamp, doc, deleteDoc } from 'firebase/firestore';
 
 const Forum = () => {
-
     const [posts, setPosts] = useState([]);
     const [newPostTitle, setNewPostTitle] = useState('');
     const [newPostContent, setNewPostContent] = useState('');
     const db = getFirestore();
     const auth = getAuth();
-    const navigation = useNavigation()
+    const navigation = useNavigation();
 
     useEffect(() => {
         const unsubscribe = onSnapshot(query(collection(db, "forum")), (querySnapshot) => {
@@ -49,19 +46,44 @@ const Forum = () => {
     };
 
     const handleDeletePost = async (postId) => {
-        try {
-            await deleteDoc(doc(db, "forum", postId));
-            Alert.alert("Post deleted successfully.");
-        } catch (error) {
-            console.error("Error deleting post: ", error);
-            Alert.alert("Failed to delete post.");
-        }
+        Alert.alert(
+            "Delete Post", // Title of the alert
+            "Are you sure you want to delete this post?",
+            [
+                {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel"
+                },
+                {
+                    text: "Yes", // Confirmation option
+                    onPress: async () => {
+                        try {
+                            await deleteDoc(doc(db, "forum", postId));
+                            Alert.alert("Post deleted successfully.");
+                        } catch (error) {
+                            console.error("Error deleting post: ", error);
+                            Alert.alert("Failed to delete post.");
+                        }
+                    }
+                }
+            ],
+            { cancelable: false }
+        );
     };
 
-
     return (
-
         <View style={styles.container}>
+            <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.backButton}
+            >
+                <Image
+                    source={require('../image/back.png')}
+                    style={styles.backImage}
+                />
+            </TouchableOpacity>
+
             <Text style={styles.title}>Let's Talk</Text>
             <TextInput
                 placeholder="Title"
@@ -95,50 +117,46 @@ const Forum = () => {
                         <Text>{item.content}</Text>
                         <Text style={styles.postDetails}>Posted by {item.userName} on {item.date.toDate().toDateString()}</Text>
                         <TouchableOpacity
-                            style={[styles.replyButton, {marginTop: 10}]} // Adjust styling as needed
+                            style={[styles.replyButton, {marginTop: 10}]}
                             onPress={() => navigation.navigate('post', { postId: item.id })}
                         >
-                            <Text style={styles.replyButtonText}>Reply</Text>
+                            <Text style={styles.replyButtonText}>View Replies</Text>
                         </TouchableOpacity>
                     </View>
                 )}
                 keyExtractor={item => item.id}
             />
-
-            <View style={styles.footer}>
-                <TouchableOpacity onPress={() => navigation.navigate('UserDashboard')} style={styles.dashboardButton}>
-                    <Text style={styles.dashboardButtonText}>Dashboard</Text>
-                </TouchableOpacity>
-            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#5264af',
-        alignSelf: 'center',
-        margin: 20,
-        paddingTop:25
-    },
     container: {
         flex: 1,
         backgroundColor: "#F5EEE6",
         padding: 20,
     },
+    title: {
+        fontSize: 30,
+        fontWeight: 'bold',
+        color: '#5264af',
+        alignSelf: 'center',
+        margin: 20,
+        paddingTop: 25,
+    },
     input: {
-        backgroundColor: "#FFF8E3",
-        borderColor: "#F3D7CA",
+        backgroundColor: "#FFFFFF",
+        borderColor: "#B0BEC5",
         borderWidth: 1,
         borderRadius: 5,
-        padding: 10,
+        padding: 15,
+        fontSize: 16,
+        color: "#37474F",
+        marginBottom: 15,
         width: '100%',
-        marginBottom: 20,
     },
     button: {
-        backgroundColor: "#C3ACD0",
+        backgroundColor: "#a16dbe",
         padding: 15,
         borderRadius: 5,
         alignItems: "center",
@@ -147,54 +165,78 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "#FFF8E3",
     },
+
     postContainer: {
         marginBottom: 20,
-        padding: 10,
-        backgroundColor: "#FFF8E3",
-        borderRadius: 5,
+        padding: 20,
+        backgroundColor: "#fff8f2",
+        borderRadius: 10,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
     },
+
     postTitle: {
         fontSize: 18,
         fontWeight: 'bold',
+        marginBottom: 8,
     },
     postDetails: {
         fontSize: 12,
         color: 'gray',
+        marginTop: 12,
     },
-
-    footer: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        marginBottom: 36,
-    },
-    dashboardButton: {
+    backButton: {
+        paddingTop: 40,
         position: 'absolute',
-        bottom: 20,
-        right: 20,
-        backgroundColor: '#D9534F',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
+        top: 10,
+        left: 10,
+        zIndex: 10,
     },
-    dashboardButtonText: {
-        color: '#FFFFFF',
-        fontSize: 14,
+    backImage: {
+        width: 50,
+        height: 50,
     },
     deleteButton: {
         position: 'absolute',
         right: 10,
         top: 10,
-        backgroundColor: "transparent",
+        backgroundColor: "#D9534F",
         padding: 5,
         zIndex: 1,
+        borderRadius:5
     },
     deleteButtonText: {
-        color: "#D9534F",
+        color: "#FFF8E3",
         fontWeight: 'bold',
     },
-
+    replyButton: {
+        marginTop: 10,
+        backgroundColor: "#78909C",
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 20,
+        alignItems: "center",
+        justifyContent: "center",
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.22,
+        shadowRadius: 2.22,
+    },
+    replyButtonText: {
+        color: "#FFFFFF",
+        fontSize: 14,
+        fontWeight: "500",
+    },
 
 });
 export default Forum;

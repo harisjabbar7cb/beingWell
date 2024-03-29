@@ -35,7 +35,7 @@ const UserDashboardTabNavigator = () => (
                 }
                 return <Ionicons name={iconName} size={size} color={color} />;
             },
-            tabBarActiveTintColor: '#C3ACD0',
+            tabBarActiveTintColor: '#8d51a8',
             tabBarInactiveTintColor: 'gray',
             tabBarStyle: { backgroundColor: '#F5EEE6' },
             headerShown: false,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 20,
-        color: '#5264af',
+        color: '#a16dbe',
     },
 });
 

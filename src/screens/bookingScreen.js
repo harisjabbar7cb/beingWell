@@ -175,14 +175,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#CCCCCC',
     },
     selectedTimeSlot: {
-        backgroundColor: '#A084CA',
+        backgroundColor: '#a16dbe',
     },
     timeText: {
         color: '#FFF8E3',
         fontSize: 16,
     },
     button: {
-        backgroundColor: '#C3ACD0',
+        backgroundColor: '#a16dbe',
         padding: 15,
         borderRadius: 5,
         width: 200,

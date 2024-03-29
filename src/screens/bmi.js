@@ -1,7 +1,7 @@
-// App.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
 const BMI = () => {
     const navigation = useNavigation();
     const [age, setAge] = useState('');
@@ -11,19 +11,18 @@ const BMI = () => {
 
     const validateForm = () => {
         if (!age || !height || !weight) {
-            alert('Please enter all fields');
+            Alert.alert('Please enter all fields');
         } else {
             countBmi();
         }
     };
+
     const handleBackToDashboard = () => {
-        navigation.navigate('UserDashboard');
+        navigation.goBack();
     };
 
     const countBmi = () => {
-        const bmi = (parseFloat(weight) /
-            ((parseFloat(height) / 100) ** 2)).toFixed(2);
-
+        const bmi = (parseFloat(weight) / ((parseFloat(height) / 100) ** 2)).toFixed(2);
         let result = '';
         if (bmi < 18.5) {
             result = 'Underweight';
@@ -36,11 +35,7 @@ const BMI = () => {
         } else if (bmi >= 35) {
             result = 'Extremely obese';
         }
-
-        // Set the BMI result
         setBmiResult({ bmi, result });
-
-        // Reset the form
         setAge('');
         setHeight('');
         setWeight('');
@@ -48,6 +43,15 @@ const BMI = () => {
 
     return (
         <View style={styles.container}>
+            <TouchableOpacity
+                onPress={handleBackToDashboard}
+                style={styles.backButton}
+            >
+                <Image
+                    source={require('../image/back.png')} // Make sure the path is correct
+                    style={styles.backImage}
+                />
+            </TouchableOpacity>
             <Text style={styles.header}>
                 BMI Calculator
             </Text>
@@ -114,7 +118,6 @@ const BMI = () => {
                 )}
             </View>
             <TouchableOpacity style={styles.backButton} onPress={handleBackToDashboard}>
-                <Text style={styles.backButtonText}>Back to Dashboard</Text>
             </TouchableOpacity>
         </View>
     );
@@ -126,7 +129,19 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5EEE6',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingTop: 60, // Adjust as needed
     },
+    backButton: {
+        position: 'absolute',
+        top: 50,
+        left: 10,
+        zIndex: 10,
+    },
+    backImage: {
+        width: 50,
+        height: 50,
+    },
+
     header: {
         fontSize: 30,
         color: '#5264af',
@@ -187,13 +202,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#5264af',
     },
-    backButton: {
-        backgroundColor: '#D9534F',
-        marginTop: 20,
-        paddingVertical: 15,
-        paddingHorizontal: 30,
-        borderRadius: 10,
-    },
+
     backButtonText: {
         color: 'white',
         fontSize: 18,

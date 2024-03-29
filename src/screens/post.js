@@ -1,10 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
-import { getFirestore, doc, getDoc, collection, addDoc, query, onSnapshot, Timestamp } from 'firebase/firestore';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    FlatList,
+    StyleSheet,
+    Alert,
+    Image
+} from 'react-native';
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    collection,
+    addDoc,
+    query,
+    onSnapshot,
+    Timestamp
+} from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
-import {useNavigation} from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { deleteDoc } from 'firebase/firestore';
-
 
 const PostDetail = ({ route }) => {
     const { postId } = route.params;
@@ -13,11 +30,10 @@ const PostDetail = ({ route }) => {
     const [newReply, setNewReply] = useState('');
     const db = getFirestore();
     const auth = getAuth();
-    const navigation = useNavigation()
+    const navigation = useNavigation();
 
     useEffect(() => {
         const fetchPostAndReplies = async () => {
-            // Fetch the main post
             const docRef = doc(db, "forum", postId);
             const docSnap = await getDoc(docRef);
 
@@ -38,13 +54,30 @@ const PostDetail = ({ route }) => {
     }, [postId]);
 
     const handleDeleteReply = async (replyId) => {
-        try {
-            await deleteDoc(doc(db, "forum", postId, "replies", replyId));
-            Alert.alert("Reply deleted successfully.");
-        } catch (error) {
-            console.error("Error deleting reply: ", error);
-            Alert.alert("Failed to delete reply.");
-        }
+        Alert.alert(
+            "Delete Reply",
+            "Are you sure you want to delete this reply?",
+            [
+                {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel"
+                },
+                {
+                    text: "Yes",
+                    onPress: async () => {
+                        try {
+                            await deleteDoc(doc(db, "forum", postId, "replies", replyId));
+                            Alert.alert("Reply deleted successfully.");
+                        } catch (error) {
+                            console.error("Error deleting reply: ", error);
+                            Alert.alert("Failed to delete reply.");
+                        }
+                    }
+                }
+            ],
+            { cancelable: false }
+        );
     };
 
     const handleReply = async () => {
@@ -74,6 +107,16 @@ const PostDetail = ({ route }) => {
 
     return (
         <View style={styles.container}>
+            <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={styles.backButton}
+            >
+                <Image
+                    source={require('../image/back.png')}
+                    style={styles.backImage}
+                />
+            </TouchableOpacity>
+
             <Text style={styles.postTitle}>{post.title}</Text>
             <Text style={styles.postContent}>{post.content}</Text>
             <Text style={styles.postDetails}>Posted by {post.userName} on {post.date?.toDate().toDateString()}</Text>
@@ -109,10 +152,6 @@ const PostDetail = ({ route }) => {
             <TouchableOpacity onPress={handleReply} style={styles.replyButton}>
                 <Text style={styles.buttonText}>Post Reply</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('forum')} style={styles.dashboardButton}>
-                <Text style={styles.dashboardButtonText}>Back to forum</Text>
-            </TouchableOpacity>
-
         </View>
     );
 };
@@ -139,10 +178,18 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     replyContainer: {
-        padding: 15,
-        marginBottom: 10,
-        backgroundColor: "#FFF8E3",
-        borderRadius: 5,
+        marginBottom: 20,
+        padding: 20,
+        backgroundColor: "#fff8f2",
+        borderRadius: 10,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
     },
     replyContent: {
         fontSize: 14,
@@ -158,21 +205,32 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     input: {
-        borderColor: "#C3ACD0",
+        backgroundColor: "#FFFFFF",
+        borderColor: "#B0BEC5",
         borderWidth: 1,
-        marginBottom: 10,
-        padding: 10,
-        backgroundColor: "#FFF",
         borderRadius: 5,
+        padding: 15,
+        fontSize: 16,
+        color: "#37474F",
+        marginBottom: 15,
     },
     replyButton: {
-        backgroundColor: "#C3ACD0",
-        padding: 10,
-        borderRadius: 5,
+        backgroundColor: "#a16dbe",
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 25,
         alignItems: "center",
+        justifyContent: "center",
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     buttonText: {
-        color: "#FFF8E3",
+        color: "#FFFFFF",
+        fontSize: 18,
+        fontWeight: "600",
     },
     deleteReplyButton: {
         marginTop: 10,
@@ -185,17 +243,15 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 12,
     },
-    dashboardButton: {
-        backgroundColor: '#D9534F',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 20,
-        alignSelf: 'center',
-        marginTop: 20,
+    backButton: {
+        position: 'absolute',
+        top: 40,
+        left: 10,
+        zIndex: 10,
     },
-    dashboardButtonText: {
-        color: '#FFFFFF',
-        fontSize: 14,
+    backImage: {
+        width: 50,
+        height: 50,
     },
 });
 

@@ -74,7 +74,7 @@ const UserDashboard = ({ navigation }) => {
                         maxLength={5}
                     />
                     <TouchableOpacity onPress={handleAddCalories}>
-                        <FontAwesome5 name="plus" size={24} color="#5264af" />
+                        <FontAwesome5 name="check" size={24} color="#5264af" />
                     </TouchableOpacity>
                 </View>
                 <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')} />
