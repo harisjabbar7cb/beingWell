@@ -16,31 +16,20 @@ const ModuleItem = ({ title, summary }) => (
     </View>
 );
 
-const MODULES_DATA = [
-    {
-        id: '1',
-        title: 'Understanding Nutrition',
-        summary: 'Learn the basics of nutrition and how it affects your body.',
-    },
-    {
-        id: '2',
-        title: 'Benefits of Regular Exercise',
-        summary: 'Discover how regular exercise can improve your overall health.',
-    },
 
-];
 
 const UserDashboard = ({ navigation }) => {
     const [waterIntake, setWaterIntake] = useState(0);
     const [calorieInput, setCalorieInput] = useState('');
     const [totalCalories, setTotalCalories] = useState(0);
+    const [selectedMood, setSelectedMood] = useState('');
 
     const incrementWaterIntake = () => {
-        if (waterIntake >= 15) {
+        if (waterIntake >= 5000) {
             Alert.alert("Warning", "You are at risk of overhydration!");
 
         }
-        setWaterIntake(waterIntake + 1);
+        setWaterIntake(waterIntake + 100);
     };
 
     const handleAddCalories = () => {
@@ -58,35 +47,35 @@ const UserDashboard = ({ navigation }) => {
             <Text style={styles.title}>BeingWell</Text>
             <View style={styles.widgetsContainer}>
                 <View style={styles.trackerContainer}>
-                    <Text style={styles.trackerText}>Water Intake: {waterIntake}</Text>
-                    <TouchableOpacity onPress={incrementWaterIntake}>
-                        <FontAwesome5 name="plus" size={24} color="#5264af" />
+                    <Text style={styles.trackerText}>Water Intake: {waterIntake} ml</Text>
+                    <TouchableOpacity style={styles.incrementButton} onPress={incrementWaterIntake}>
+                        <FontAwesome5 name="plus" size={24} color="#5264af" style={styles.incrementIcon} />
+                        <Text style={styles.incrementText}>100ml</Text>
                     </TouchableOpacity>
                 </View>
                 <View style={styles.trackerContainer}>
-                    <Text style={styles.trackerText}>Total Calories: {totalCalories}</Text>
+                    <Text style={styles.trackerText}>Calories: {totalCalories} </Text>
                     <TextInput
                         style={styles.calorieInput}
-                        placeholder="Add..."
+                        placeholder="Enter"
                         keyboardType="numeric"
                         value={calorieInput}
                         onChangeText={setCalorieInput}
                         maxLength={5}
                     />
-                    <TouchableOpacity onPress={handleAddCalories}>
-                        <FontAwesome5 name="check" size={24} color="#5264af" />
+                    <TouchableOpacity style={styles.incrementButton} onPress={handleAddCalories}>
+                        <FontAwesome5 name="check" size={24} color="#5264af" style={styles.incrementIcon} />
+
+                        <Text style={styles.incrementText}>Add</Text>
                     </TouchableOpacity>
                 </View>
+
                 <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')} />
                 <WidgetButton icon="book" title="Your Journal" onPress={() => navigation.navigate('journal')}/>
                 <WidgetButton icon="newspaper" title="Forum"  onPress={() => navigation.navigate('forum')} />
+                <WidgetButton icon="spa" title="Meditation"  onPress={() => navigation.navigate('meditation')} />
             </View>
-            <FlatList
-                data={MODULES_DATA}
-                renderItem={({ item }) => <ModuleItem title={item.title} summary={item.summary} />}
-                keyExtractor={item => item.id}
-                style={styles.modulesList}
-            />
+
         </View>
     );
 };
@@ -119,6 +108,34 @@ const styles = StyleSheet.create({
         borderBottomColor: '#E0E0E0',
         marginHorizontal: 20,
         marginTop: 15,
+        borderRadius: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    incrementButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#E0E0E0',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    incrementIcon: {
+        marginRight: 10,
+    },
+    incrementText: {
+        fontSize: 16,
+        color: '#5264af',
+        fontWeight: '600',
     },
     icon: {
         marginRight: 20,
@@ -161,6 +178,12 @@ const styles = StyleSheet.create({
         padding: 20,
         marginHorizontal: 20,
         marginTop: 15,
+        borderRadius: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     trackerText: {
         fontSize: 18,
@@ -173,6 +196,7 @@ const styles = StyleSheet.create({
         padding: 10,
         marginRight: 10,
         width: 100,
+        borderRadius:20
     },
     addButton: {
         padding: 10,

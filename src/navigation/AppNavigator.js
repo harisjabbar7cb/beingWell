@@ -14,6 +14,7 @@ import journal from "../screens/journal";
 import logout from "../screens/logout";
 import forum from "../screens/forum"
 import post from "../screens/post"
+import meditation from "../screens/meditation";
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,7 @@ const AppNavigator = () => {
             <Stack.Screen name="logout" component={logout}/>
             <Stack.Screen name="forum" component={forum}/>
             <Stack.Screen name="post" component={post}/>
+            <Stack.Screen name="meditation" component={meditation}/>
         </Stack.Navigator>
     );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getFirestore, doc, deleteDoc, collection,query,where,getDocs} from 'firebase/firestore';
+import { getFirestore, doc, deleteDoc, collection,query,where,getDocs,setDoc,getDoc,updateDoc} from 'firebase/firestore';
 import { app } from '../firebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -13,37 +13,57 @@ const BookingSuccessPage = ({ route }) => {
     const navigation = useNavigation();
 
     const cancelBooking = async () => {
-        try {
-            const uid = await AsyncStorage.getItem('userUID');
-            if (!uid) {
-                Alert.alert("Error", "User not identified.");
-                return;
-            }
+        Alert.alert(
+            "Cancel Booking",
+            "Are you sure you want to cancel your booking?",
+            [
+                {
+                    text: "No",
+                    onPress: () => console.log("Cancellation aborted"),
+                    style: "cancel"
+                },
+                {
+                    text: "Yes", onPress: async () => {
+                        try {
+                            const uid = await AsyncStorage.getItem('userUID');
+                            if (!uid) {
+                                Alert.alert("Error", "User not identified.");
+                                return;
+                            }
 
-            // Query for the booking document
-            const bookingsRef = collection(db, "appointments");
-            const q = query(bookingsRef, where("date", "==", date), where("time", "==", time), where("uid", "==", uid));
+                            // Attempt to find the specific time slot to mark it as available again
+                            const timeSlotRef = doc(db, "available_dates", date, "times", time); // Assuming 'time' can be used as a doc ID
 
-            const querySnapshot = await getDocs(q);
-            if (querySnapshot.empty) {
-                Alert.alert("Not Found", "No matching booking found.");
-                return;
-            }
+                            // Check if the time slot document exists
+                            const docSnap = await getDoc(timeSlotRef);
+                            if (!docSnap.exists()) {
+                                // If it doesn't exist, create it and mark as available
+                                await setDoc(timeSlotRef, { available: true });
+                            } else {
+                                // If it exists, just update it to available
+                                await updateDoc(timeSlotRef, { available: true });
+                            }
 
+                            // Delete the appointment from the appointments collection
+                            const q = query(collection(db, "appointments"), where("uid", "==", uid), where("date", "==", date), where("time", "==", time));
+                            const querySnapshot = await getDocs(q);
+                            querySnapshot.forEach(async (document) => {
+                                await deleteDoc(doc(db, "appointments", document.id));
+                            });
 
-            querySnapshot.forEach(async (document) => {
-                await deleteDoc(doc(db, "appointments", document.id));
-            });
-
-            Alert.alert("Booking Cancelled", "Your booking has been successfully cancelled.", [
-                { text: "OK", onPress: () => navigation.navigate('UserDashboard', { screen: 'Dashboard' }) }
-            ]);
-        } catch (error) {
-            console.error("Error cancelling booking:", error);
-            Alert.alert("Error", "Could not cancel the booking. Please try again.");
-        }
+                            Alert.alert("Booking Cancelled", "Your booking has been successfully cancelled.", [
+                                { text: "OK", onPress: () => navigation.goBack() } // or navigate to a specific screen as needed
+                            ]);
+                        } catch (error) {
+                            console.error("Error cancelling booking:", error);
+                            Alert.alert("Error", "Could not cancel the booking. Please try again.");
+                        }
+                    }
+                }
+            ],
+            { cancelable: false }
+        );
     };
-
     return (
         <View style={styles.container}>
             <Text style={styles.headerText}>Your Booking</Text>

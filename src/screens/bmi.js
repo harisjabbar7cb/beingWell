@@ -48,7 +48,7 @@ const BMI = () => {
                 style={styles.backButton}
             >
                 <Image
-                    source={require('../image/back.png')} // Make sure the path is correct
+                    source={require('../image/back.png')}
                     style={styles.backImage}
                 />
             </TouchableOpacity>
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5EEE6',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingTop: 60, // Adjust as needed
+        paddingTop: 60,
     },
     backButton: {
         position: 'absolute',

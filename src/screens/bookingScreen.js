@@ -13,8 +13,11 @@ const BookingScreen = () => {
     const [selectedTime, setSelectedTime] = useState('');
     const [markedDates, setMarkedDates] = useState({});
     const navigation = useNavigation();
+    const [showInstructions, setShowInstructions] = useState(true);
 
     useEffect(() => {
+
+
         const fetchDatesAndTimes = async () => {
             const datesCollectionRef = collection(db, 'available_dates');
             const datesSnapshot = await getDocs(datesCollectionRef);
@@ -68,6 +71,7 @@ const BookingScreen = () => {
         }, [navigation])
     );
 
+
     const bookAppointment = async () => {
         try {
             const uid = await AsyncStorage.getItem('userUID');
@@ -92,6 +96,7 @@ const BookingScreen = () => {
         }
     };
 
+
     const renderTimeSlot = ({ item }) => (
         <TouchableOpacity
             style={[
@@ -115,26 +120,33 @@ const BookingScreen = () => {
                         return;
                     }
                     setSelectedDate(day.dateString);
+                    setShowInstructions(false);
                 }}
                 markedDates={{
                     ...markedDates,
                     [selectedDate]: { ...markedDates[selectedDate], selected: true },
                 }}
             />
-            <FlatList
-                data={availableTimes}
-                renderItem={renderTimeSlot}
-                keyExtractor={(item) => item.id}
-                numColumns={4}
-                style={styles.timesGrid}
-            />
+            {showInstructions && (
+                <View style={styles.instructionsContainer}>
+                    <Text style={styles.instructions}>
+                        Select a date to book an appointment with one of our 20 trained health ambassadors.
+                        You will receive an email confirmation with a Microsoft Teams meeting link once booked.
+                    </Text>
+                </View>
+            )}
+            {!showInstructions && (
+                <FlatList
+                    data={availableTimes}
+                    renderItem={renderTimeSlot}
+                    keyExtractor={(item) => item.id}
+                    numColumns={4}
+                    style={styles.timesGrid}
+                />
+            )}
             <TouchableOpacity
                 style={[styles.button, { opacity: selectedTime ? 1 : 0.5 }]}
-                onPress={() => {
-                    if (selectedTime) {
-                        bookAppointment();
-                    }
-                }}
+                onPress={bookAppointment}
                 disabled={!selectedTime}
             >
                 <Text style={styles.buttonText}>Confirm Appointment</Text>
@@ -192,6 +204,26 @@ const styles = StyleSheet.create({
     buttonText: {
         color: '#FFF8E3',
         fontSize: 18,
+        textAlign: 'center',
+    },
+    instructionsContainer: {
+        marginTop: 20,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 10,
+        padding: 20,
+        marginHorizontal: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    instructions: {
+        fontSize: 18,
+        color: '#333',
         textAlign: 'center',
     },
 });
