@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, FlatList } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-const WidgetButton = ({ icon, title, onPress }) => (
+const WidgetButton = ({ icon, title, onPress, children }) => (
     <TouchableOpacity style={styles.widget} onPress={onPress}>
-        <FontAwesome5 name={icon} size={24} color="#5264af" style={styles.icon} />
+        {icon === "water" ? (
+            // Using 'tint' for a water drop icon. Replace 'tint' with 'glass-whiskey' if you prefer a glass icon.
+            <FontAwesome5 name="tint" size={24} color="#5264af" style={styles.icon} />
+        ) : (
+            <FontAwesome5 name={icon} size={24} color="#5264af" style={styles.icon} />
+        )}
         <Text style={styles.widgetText}>{title}</Text>
+        {children}
     </TouchableOpacity>
 );
-
 const ModuleItem = ({ title, summary }) => (
     <View style={styles.moduleItem}>
         <Text style={styles.moduleTitle}>{title}</Text>
@@ -16,13 +21,33 @@ const ModuleItem = ({ title, summary }) => (
     </View>
 );
 
+const fetchWaterIntakeData = async () => {
+    return [
+        { date: '03/25', waterIntake: 2130 },
+        { date: '03/26', waterIntake: 3310 },
+        { date: '03/27', waterIntake: 3420 },
+        { date: '0328', waterIntake: 1340 },
+        { date: '03/29', waterIntake: 2340},
+        { date: '03/30', waterIntake: 4530 },
+        { date: '03/31', waterIntake: 4320 },
+    ];
+};
 
 
 const UserDashboard = ({ navigation }) => {
     const [waterIntake, setWaterIntake] = useState(0);
+    const [pastSevenDaysData, setPastSevenDaysData] = useState([]);
     const [calorieInput, setCalorieInput] = useState('');
     const [totalCalories, setTotalCalories] = useState(0);
     const [selectedMood, setSelectedMood] = useState('');
+
+    useEffect(() => {
+        fetchWaterIntakeData().then(data => {
+            setPastSevenDaysData(data);
+        }).catch(error => {
+            console.error("Error fetching data:", error);
+        });
+    }, []);
 
     const incrementWaterIntake = () => {
         if (waterIntake >= 5000) {
@@ -31,6 +56,12 @@ const UserDashboard = ({ navigation }) => {
         }
         setWaterIntake(waterIntake + 100);
     };
+
+    const decrementWaterIntake = () => {
+        if (!(waterIntake == 0)) {
+            setWaterIntake(waterIntake - 100);
+        }
+    }
 
     const handleAddCalories = () => {
         const inputCalories = parseInt(calorieInput, 10);
@@ -46,34 +77,48 @@ const UserDashboard = ({ navigation }) => {
         <View style={styles.container}>
             <Text style={styles.title}>BeingWell</Text>
             <View style={styles.widgetsContainer}>
-                <View style={styles.trackerContainer}>
-                    <Text style={styles.trackerText}>Water Intake: {waterIntake} ml</Text>
-                    <TouchableOpacity style={styles.incrementButton} onPress={incrementWaterIntake}>
-                        <FontAwesome5 name="plus" size={24} color="#5264af" style={styles.incrementIcon} />
-                        <Text style={styles.incrementText}>100ml</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.trackerContainer}>
-                    <Text style={styles.trackerText}>Calories: {totalCalories} </Text>
-                    <TextInput
-                        style={styles.calorieInput}
-                        placeholder="Enter"
-                        keyboardType="numeric"
-                        value={calorieInput}
-                        onChangeText={setCalorieInput}
-                        maxLength={5}
-                    />
-                    <TouchableOpacity style={styles.incrementButton} onPress={handleAddCalories}>
-                        <FontAwesome5 name="check" size={24} color="#5264af" style={styles.incrementIcon} />
 
-                        <Text style={styles.incrementText}>Add</Text>
-                    </TouchableOpacity>
-                </View>
+                <WidgetButton icon="water" title="" onPress={() => navigation.navigate('HealthData', { pastSevenDaysData })}>
+                    <View style={styles.waterButtonContainer}>
+                        <Text style={styles.trackerText}>Water Intake: {waterIntake} ml</Text>
+                        <View style={styles.horizontalButtonContainer}>
+                            <TouchableOpacity style={styles.button} onPress={decrementWaterIntake}>
+                                <FontAwesome5 name="minus" size={16} color="#5264af" />
+                            </TouchableOpacity>
+                            <Text style={styles.buttonText}>100ml</Text>
+                            <TouchableOpacity style={styles.button} onPress={incrementWaterIntake}>
+                                <FontAwesome5 name="plus" size={16} color="#5264af" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </WidgetButton>
 
-                <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')} />
+
+                <WidgetButton icon="utensils" title="Track Calories" onPress={() => {}}>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Text style={[styles.trackerText, {marginRight: 10}]}></Text>
+                        <TextInput
+                            style={styles.calorieInput}
+                            placeholder="Enter"
+                            keyboardType="numeric"
+                            value={calorieInput}
+                            onChangeText={setCalorieInput}
+                            maxLength={5}
+                        />
+                        <TouchableOpacity style={styles.incrementButton} onPress={handleAddCalories}>
+                            <FontAwesome5 name="check" size={16} color="#5264af" />
+                        </TouchableOpacity>
+                    </View>
+                </WidgetButton>
+
+
+                <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')}/>
                 <WidgetButton icon="book" title="Your Journal" onPress={() => navigation.navigate('journal')}/>
                 <WidgetButton icon="newspaper" title="Forum"  onPress={() => navigation.navigate('forum')} />
                 <WidgetButton icon="spa" title="Meditation"  onPress={() => navigation.navigate('meditation')} />
+                <WidgetButton icon="book-open" title="Learning Modules" onPress={() => {}}>
+                </WidgetButton>
+
             </View>
 
         </View>
@@ -115,6 +160,8 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
+
+
     incrementButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -128,7 +175,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
+        marginLeft: 40,
     },
+
     incrementIcon: {
         marginRight: 10,
     },
@@ -137,6 +186,7 @@ const styles = StyleSheet.create({
         color: '#5264af',
         fontWeight: '600',
     },
+
     icon: {
         marginRight: 20,
     },
@@ -200,6 +250,49 @@ const styles = StyleSheet.create({
     },
     addButton: {
         padding: 10,
+    },
+    waterContainer: {
+        flexDirection: 'column',
+        alignItems: 'center',
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+
+    verticalButtonContainer: {
+        flexDirection: 'column',
+        alignItems: 'center',
+        marginRight: 20,
+    },
+    smallButton: {
+
+        backgroundColor: '#E0E0E0',
+        padding: 6,
+        borderRadius: 10,
+        marginBottom: 5,
+    },
+    waterButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+        paddingHorizontal: 20,
+    },
+    horizontalButtonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    button: {
+        backgroundColor: '#E0E0E0',
+        padding: 8,
+        borderRadius: 10,
+        marginHorizontal: 5,
+    },
+    buttonText: {
+        fontSize: 16,
+        color: '#5264af',
+        fontWeight: '600',
     },
 });
 
