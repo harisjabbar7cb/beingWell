@@ -1,20 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList, Alert, Dimensions, ScrollView } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { firebaseConfig } from '../firebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 
-
 const screenWidth = Dimensions.get('window').width;
-
 const sidePadding = 20;
-
-
 const contentWidth = screenWidth - (sidePadding * 2);
-
 
 initializeApp(firebaseConfig);
 
@@ -46,11 +40,13 @@ const ambienceOptions = [
     { label: "Lofi Hip Hop", value: "lofiHipHop", image: require('../image/lofi.jpg'), color: '#BCAAA4' },
 ];
 
+const timeOptions = [5, 10, 15];
+
 const MeditationCreator = () => {
     const [creatingNewMeditation, setCreatingNewMeditation] = useState(false);
     const [selectedSpeaker, setSelectedSpeaker] = useState(null);
     const [selectedAmbience, setSelectedAmbience] = useState(null);
-    const [selectedTime, setSelectedTime] = useState(5);
+    const [selectedTime, setSelectedTime] = useState(timeOptions[0]);
     const [savedMeditations, setSavedMeditations] = useState([]);
     const scrollViewRef = useRef();
     const navigation = useNavigation();
@@ -58,6 +54,7 @@ const MeditationCreator = () => {
     useEffect(() => {
         fetchSavedMeditations();
     }, []);
+
     const fetchSavedMeditations = async () => {
         const uid = await AsyncStorage.getItem('userUID');
         if (!uid) {
@@ -71,11 +68,27 @@ const MeditationCreator = () => {
         setSavedMeditations(meditations);
     };
 
-
+    const getDisplayName = (name) => {
+        switch (name) {
+            case 'alanWatts':
+                return 'Alan Watts';
+            case 'binauralBeats':
+                return 'Binaural Beats';
+            case 'lofiHipHop':
+                return 'Lofi Hip Hop';
+            default:
+                return name.charAt(0).toUpperCase() + name.slice(1);
+        }
+    };
 
     const handleCreateMeditation = async () => {
         if (!selectedSpeaker || !selectedAmbience || !selectedTime) {
             Alert.alert("Error", "Please make sure all options are selected.");
+            return;
+        }
+
+        if (savedMeditations.length >= 3) {
+            Alert.alert("Limit Reached", "You can only have up to 3 custom meditations. Please delete a meditation to create a new one.");
             return;
         }
 
@@ -110,10 +123,10 @@ const MeditationCreator = () => {
             Alert.alert("Error", "There was a problem deleting the meditation.");
         }
     };
+
     const handleBackToDashboard = () => {
         navigation.goBack();
     };
-
 
     return (
         <View style={styles.container}>
@@ -143,11 +156,18 @@ const MeditationCreator = () => {
                                         </TouchableOpacity>
                                         <View style={styles.meditationDetails}>
                                             <View style={styles.meditationContent}>
-                                                <Text style={styles.meditationText}>Speaker: {item.speaker}</Text>
-                                                <Text style={styles.meditationText}>Ambience: {item.ambience}</Text>
+                                                <Text style={styles.meditationText}>Speaker: {getDisplayName(item.speaker)}</Text>
+                                                <Text style={styles.meditationText}>Ambience: {getDisplayName(item.ambience)}</Text>
                                             </View>
-                                            <TouchableOpacity style={styles.playButton}>
-                                                <Image source={require('../image/playbutton.png')} style={styles.playIcon} />
+                                            <TouchableOpacity
+                                                style={styles.playButton}
+                                                onPress={() => navigation.navigate('playMeditation', {
+                                                    ambience: item.ambience,
+                                                    speaker: item.speaker,
+                                                    time: item.time,
+                                                })}
+                                            >
+                                                <Image source={require('../image/play.png')} style={styles.playIcon} />
                                             </TouchableOpacity>
                                         </View>
                                         <Text style={styles.meditationTime}>{item.time} min</Text>
@@ -199,15 +219,17 @@ const MeditationCreator = () => {
                                 />
 
                                 <Text style={styles.subHeader}>Select Time Duration:</Text>
-                                <Slider
-                                    style={styles.slider}
-                                    step={5}
-                                    minimumValue={5}
-                                    maximumValue={30}
-                                    value={selectedTime}
-                                    onValueChange={(value) => setSelectedTime(value)}
-                                />
-                                <Text style={styles.timeLabel}>{selectedTime} Minutes</Text>
+                                <View style={styles.timeButtonsContainer}>
+                                    {timeOptions.map((time, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={[styles.timeButton, selectedTime === time && styles.selectedTimeButton]}
+                                            onPress={() => setSelectedTime(time)}
+                                        >
+                                            <Text style={styles.timeButtonText}>{time} min</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
 
                                 <TouchableOpacity
                                     style={styles.createButton}
@@ -230,12 +252,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#F5EEE6",
-        paddingTop:40,
-
+        paddingTop: 40,
     },
     scrollContent: {
         paddingBottom: 20,
-        paddingTop:10,
+        paddingTop: 10,
     },
     content: {
         padding: 10,
@@ -310,15 +331,23 @@ const styles = StyleSheet.create({
     ambienceLabel: {
         textAlign: 'center',
     },
-    slider: {
-        height: 40,
-        marginVertical: 20,
+    timeButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 20,
     },
-    timeLabel: {
+    timeButton: {
+        backgroundColor: "#e0e0e0",
+        borderRadius: 5,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+    },
+    selectedTimeButton: {
+        backgroundColor: "#c8e6c9",
+    },
+    timeButtonText: {
         fontSize: 16,
         color: '#37474F',
-        marginBottom: 20,
-        textAlign: 'center',
     },
     playButton: {
         position: 'absolute',
