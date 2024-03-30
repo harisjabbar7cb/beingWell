@@ -3,13 +3,23 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 
 const HealthData = ({ route, navigation }) => {
-    const pastSevenDaysData = route.params ? route.params.pastSevenDaysData : [];
+    const waterHistoryData = route.params ? route.params.waterHistoryData : [];
+    const calorieHistoryData = route.params ? route.params.calorieHistoryData : [];
 
-    const data = {
-        labels: pastSevenDaysData.map(item => item.date),
+    const waterData = {
+        labels: waterHistoryData.map(item => item.date),
         datasets: [
             {
-                data: pastSevenDaysData.map(item => item.waterIntake),
+                data: waterHistoryData.map(item => item.waterIntake),
+            },
+        ],
+    };
+
+    const calorieData = {
+        labels: calorieHistoryData.map(item => item.date),
+        datasets: [
+            {
+                data: calorieHistoryData.map(item => item.calories),
             },
         ],
     };
@@ -30,7 +40,7 @@ const HealthData = ({ route, navigation }) => {
             <View style={styles.chartContainer}>
                 <Text style={styles.chartText}>Water Intake History</Text>
                 <BarChart
-                    data={data}
+                    data={waterData}
                     width={350}
                     height={220}
                     yAxisSuffix="ml"
@@ -50,7 +60,31 @@ const HealthData = ({ route, navigation }) => {
                         fillShadowGradientOpacity: 1,
                     }}
                 />
+            </View>
 
+            <View style={styles.chartContainer}>
+                <Text style={styles.calorieChartText}>Calories History</Text>
+                <BarChart
+                    data={calorieData}
+                    width={350}
+                    height={220}
+                    yAxisSuffix="ml"
+                    chartConfig={{
+                        backgroundColor: "#ffffff",
+                        backgroundGradientFrom: "#ffffff",
+                        backgroundGradientTo: "#ffffff",
+                        decimalPlaces: 0,
+                        color: (opacity = 1) => `rgba(171, 120, 78, ${opacity})`, 
+                        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                        style: {
+                            borderRadius: 16,
+                        },
+                        barPercentage: 0.5,
+                        useShadowColorFromDataset: false,
+                        fillShadowGradient: `rgba(171, 120, 78, 1)`,
+                        fillShadowGradientOpacity: 1,
+                    }}
+                />
             </View>
         </View>
     );
@@ -86,6 +120,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFF",
         paddingVertical: 20,
         paddingHorizontal: 20,
+        marginTop: 8,
         borderRadius: 20,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -96,6 +131,12 @@ const styles = StyleSheet.create({
     chartText: {
         fontSize: 18,
         color: '#5264af',
+        fontWeight: '600',
+        marginBottom: 10,
+    },
+    calorieChartText: {
+        fontSize: 18,
+        color: '#bcaaa4',
         fontWeight: '600',
         marginBottom: 10,
     },

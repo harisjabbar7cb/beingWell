@@ -26,24 +26,43 @@ const fetchWaterIntakeData = async () => {
         { date: '03/25', waterIntake: 2130 },
         { date: '03/26', waterIntake: 3310 },
         { date: '03/27', waterIntake: 3420 },
-        { date: '0328', waterIntake: 1340 },
+        { date: '03/28', waterIntake: 1340 },
         { date: '03/29', waterIntake: 2340},
         { date: '03/30', waterIntake: 4530 },
         { date: '03/31', waterIntake: 4320 },
     ];
 };
 
+const fetchCalorieData = async () => {
+    return [
+        { date: '03/25', calories: 2130 },
+        { date: '03/26', calories: 2310 },
+        { date: '03/27', calories: 1920 },
+        { date: '03/28', calories: 2340 },
+        { date: '03/29', calories: 2340},
+        { date: '03/30', calories: 1975 },
+        { date: '03/31', calories: 2220 },
+    ];
+};
+
 
 const UserDashboard = ({ navigation }) => {
     const [waterIntake, setWaterIntake] = useState(0);
-    const [pastSevenDaysData, setPastSevenDaysData] = useState([]);
+    const [waterHistoryData, setwaterHistoryData] = useState([]);
     const [calorieInput, setCalorieInput] = useState('');
     const [totalCalories, setTotalCalories] = useState(0);
+    const [calorieHistoryData, setCalorieData] = useState([]);
     const [selectedMood, setSelectedMood] = useState('');
 
     useEffect(() => {
         fetchWaterIntakeData().then(data => {
-            setPastSevenDaysData(data);
+            setwaterHistoryData(data);
+        }).catch(error => {
+            console.error("Error fetching data:", error);
+        });
+
+        fetchCalorieData().then(data => {
+            setCalorieData(data);
         }).catch(error => {
             console.error("Error fetching data:", error);
         });
@@ -78,7 +97,7 @@ const UserDashboard = ({ navigation }) => {
             <Text style={styles.title}>BeingWell</Text>
             <View style={styles.widgetsContainer}>
 
-                <WidgetButton icon="water" title="" onPress={() => navigation.navigate('HealthData', { pastSevenDaysData })}>
+                <WidgetButton icon="water" title="" onPress={() => navigation.navigate('HealthData', { waterHistoryData, calorieHistoryData })}>
                     <View style={styles.waterButtonContainer}>
                         <Text style={styles.trackerText}>Water Intake: {waterIntake} ml</Text>
                         <View style={styles.horizontalButtonContainer}>
@@ -94,9 +113,9 @@ const UserDashboard = ({ navigation }) => {
                 </WidgetButton>
 
 
-                <WidgetButton icon="utensils" title="Track Calories" onPress={() => {}}>
+                <WidgetButton icon="utensils" title="" onPress={() => navigation.navigate('HealthData',{waterHistoryData,calorieHistoryData})}>
                     <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Text style={[styles.trackerText, {marginRight: 10}]}></Text>
+                        <Text style={[styles.trackerText, {marginRight: 10}]}>Calories: {totalCalories} kcal</Text>
                         <TextInput
                             style={styles.calorieInput}
                             placeholder="Enter"
@@ -160,8 +179,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
-
-
     incrementButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -177,7 +194,6 @@ const styles = StyleSheet.create({
         elevation: 2,
         marginLeft: 40,
     },
-
     incrementIcon: {
         marginRight: 10,
     },
