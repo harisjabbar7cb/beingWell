@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, FlatList } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-const WidgetButton = ({ icon, title, onPress }) => (
+const WidgetButton = ({ icon, title, onPress, children}) => (
     <TouchableOpacity style={styles.widget} onPress={onPress}>
         <FontAwesome5 name={icon} size={24} color="#5264af" style={styles.icon} />
         <Text style={styles.widgetText}>{title}</Text>
+        {children}
     </TouchableOpacity>
 );
 
@@ -16,13 +17,34 @@ const ModuleItem = ({ title, summary }) => (
     </View>
 );
 
+const fetchWaterIntakeData = async () => {
+    // Simulating fetching data from Firebase (replace this with actual Firebase code)
+    return [
+        { date: '03/25', waterIntake: 1750 },
+        { date: '03/26', waterIntake: 2500 },
+        { date: '03/27', waterIntake: 2200 },
+        { date: '0328', waterIntake: 1800 },
+        { date: '03/29', waterIntake: 3000 },
+        { date: '03/30', waterIntake: 1200 },
+        { date: '03/31', waterIntake: 2100 },
+    ];
+};
 
 
 const UserDashboard = ({ navigation }) => {
     const [waterIntake, setWaterIntake] = useState(0);
+    const [pastSevenDaysData, setPastSevenDaysData] = useState([]);
     const [calorieInput, setCalorieInput] = useState('');
     const [totalCalories, setTotalCalories] = useState(0);
     const [selectedMood, setSelectedMood] = useState('');
+
+    useEffect(() => {
+        fetchWaterIntakeData().then(data => {
+            setPastSevenDaysData(data);
+        }).catch(error => {
+            console.error("Error fetching data:", error);
+        });
+    }, []);
 
     const incrementWaterIntake = () => {
         if (waterIntake >= 5000) {
@@ -31,6 +53,12 @@ const UserDashboard = ({ navigation }) => {
         }
         setWaterIntake(waterIntake + 100);
     };
+
+    const decrementWaterIntake = () => {
+        if (!(waterIntake == 0)) {
+            setWaterIntake(waterIntake - 100);
+        }
+    }
 
     const handleAddCalories = () => {
         const inputCalories = parseInt(calorieInput, 10);
@@ -46,31 +74,41 @@ const UserDashboard = ({ navigation }) => {
         <View style={styles.container}>
             <Text style={styles.title}>BeingWell</Text>
             <View style={styles.widgetsContainer}>
-                <View style={styles.trackerContainer}>
-                    <Text style={styles.trackerText}>Water Intake: {waterIntake} ml</Text>
-                    <TouchableOpacity style={styles.incrementButton} onPress={incrementWaterIntake}>
-                        <FontAwesome5 name="plus" size={24} color="#5264af" style={styles.incrementIcon} />
-                        <Text style={styles.incrementText}>100ml</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.trackerContainer}>
-                    <Text style={styles.trackerText}>Calories: {totalCalories} </Text>
-                    <TextInput
-                        style={styles.calorieInput}
-                        placeholder="Enter"
-                        keyboardType="numeric"
-                        value={calorieInput}
-                        onChangeText={setCalorieInput}
-                        maxLength={5}
-                    />
-                    <TouchableOpacity style={styles.incrementButton} onPress={handleAddCalories}>
-                        <FontAwesome5 name="check" size={24} color="#5264af" style={styles.incrementIcon} />
 
-                        <Text style={styles.incrementText}>Add</Text>
-                    </TouchableOpacity>
+                <WidgetButton icon="water" title="" onPress={() => navigation.navigate('HealthData',{pastSevenDaysData})}>
+                    <View style={styles.waterContainer}>
+                        <Text style={styles.trackerText}>Water Intake: {waterIntake} ml</Text>
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity style={styles.incrementButton} onPress={incrementWaterIntake}>
+                                <FontAwesome5 name="plus" size={24} color="#5264af" style={styles.incrementIcon} />
+                                <Text style={styles.incrementText}>100ml</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.incrementButton} onPress={decrementWaterIntake}>
+                                <FontAwesome5 name="minus" size={24} color="#5264af" style={styles.incrementIcon} />
+                                <Text style={styles.incrementText}>100ml</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </WidgetButton> 
+
+                <View style={styles.trackerContainer}>
+                        <Text style={styles.trackerText}>Calories: {totalCalories} </Text>
+                        <TextInput
+                                style={styles.calorieInput}
+                                placeholder="Enter"
+                                keyboardType="numeric"
+                                value={calorieInput}
+                                onChangeText={setCalorieInput}
+                                maxLength={5}
+                        />
+                        <TouchableOpacity style={styles.incrementButton} onPress={handleAddCalories}>
+                            <FontAwesome5 name="check" size={24} color="#5264af" style={styles.incrementIcon} />
+
+                            <Text style={styles.incrementText}>Add</Text>
+                        </TouchableOpacity>
                 </View>
 
-                <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')} />
+                <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')}/>
                 <WidgetButton icon="book" title="Your Journal" onPress={() => navigation.navigate('journal')}/>
                 <WidgetButton icon="newspaper" title="Forum"  onPress={() => navigation.navigate('forum')} />
                 <WidgetButton icon="spa" title="Meditation"  onPress={() => navigation.navigate('meditation')} />
@@ -201,6 +239,14 @@ const styles = StyleSheet.create({
     addButton: {
         padding: 10,
     },
+    waterContainer: {
+        flexDirection: 'column',
+        alignItems: 'center',
+    }, 
+    buttonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    }   
 });
 
 export default UserDashboard;
