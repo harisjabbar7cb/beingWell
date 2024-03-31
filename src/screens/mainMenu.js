@@ -5,7 +5,6 @@ import { FontAwesome5 } from '@expo/vector-icons';
 const WidgetButton = ({ icon, title, onPress, children }) => (
     <TouchableOpacity style={styles.widget} onPress={onPress}>
         {icon === "water" ? (
-            // Using 'tint' for a water drop icon. Replace 'tint' with 'glass-whiskey' if you prefer a glass icon.
             <FontAwesome5 name="tint" size={24} color="#5264af" style={styles.icon} />
         ) : (
             <FontAwesome5 name={icon} size={24} color="#5264af" style={styles.icon} />
@@ -113,22 +112,25 @@ const UserDashboard = ({ navigation }) => {
                 </WidgetButton>
 
 
-                <WidgetButton icon="utensils" title="" onPress={() => navigation.navigate('HealthData',{waterHistoryData,calorieHistoryData})}>
-                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Text style={[styles.trackerText, {marginRight: 10}]}>Calories: {totalCalories} kcal</Text>
-                        <TextInput
-                            style={styles.calorieInput}
-                            placeholder="Enter"
-                            keyboardType="numeric"
-                            value={calorieInput}
-                            onChangeText={setCalorieInput}
-                            maxLength={5}
-                        />
-                        <TouchableOpacity style={styles.incrementButton} onPress={handleAddCalories}>
-                            <FontAwesome5 name="check" size={16} color="#5264af" />
-                        </TouchableOpacity>
+                <WidgetButton icon="utensils" title="" onPress={() => navigation.navigate('HealthData', {waterHistoryData, calorieHistoryData})}>
+                    <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1}}>
+                        <Text style={[styles.trackerText, {flexShrink: 1}]}>Calories: {totalCalories} kcal</Text>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <TextInput
+                                style={styles.calorieInput}
+                                placeholder="Enter"
+                                keyboardType="numeric"
+                                value={calorieInput}
+                                onChangeText={setCalorieInput}
+                                maxLength={5}
+                            />
+                            <TouchableOpacity style={[styles.incrementButton, { marginLeft: 10 }]} onPress={handleAddCalories}>
+                                <FontAwesome5 name="check" size={16} color="#5264af" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </WidgetButton>
+
 
 
                 <WidgetButton icon="calculator" title="BMI Calculator" onPress={() => navigation.navigate('bmi')}/>
@@ -260,7 +262,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#5264af',
         padding: 10,
-        marginRight: 10,
         width: 100,
         borderRadius:20
     },
