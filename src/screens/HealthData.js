@@ -143,7 +143,7 @@ const HealthData = ({ route, navigation }) => {
                     data={calorieData}
                     width={350}
                     height={220}
-                    yAxisSuffix="ml"
+                    
                     chartConfig={{
                         backgroundColor: "#ffffff",
                         backgroundGradientFrom: "#ffffff",
