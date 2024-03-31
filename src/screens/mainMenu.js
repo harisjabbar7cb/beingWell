@@ -37,7 +37,7 @@ const UserDashboard = ({ navigation }) => {
                 const data = doc.data();
                 // Assuming 'waterIntake' and 'calories' are fields in the document
                 setWaterIntake(data.waterIntake || 0);
-                setTotalCalories(data.calories || 0);
+                setTotalCalories(data.calorieIntake || 0);
             });
         };
 
@@ -61,7 +61,7 @@ const UserDashboard = ({ navigation }) => {
 
         if (field === "waterIntake") {
             setWaterIntake(intake);
-        } else if (field === "calories") {
+        } else if (field === "calorieIntake") {
             setTotalCalories(intake);
         }
     };
@@ -88,7 +88,7 @@ const UserDashboard = ({ navigation }) => {
         const inputCalories = parseInt(calorieInput, 10);
         if (!isNaN(inputCalories) && inputCalories <= 10000 && inputCalories >= 0) {
             const newIntake = totalCalories + inputCalories;
-            updateIntakeData("calories", newIntake);
+            updateIntakeData("calorieIntake", newIntake);
             setCalorieInput('');
         } else {
             Alert.alert("Invalid Input", "Please enter a number between 0 and 10,000.");
