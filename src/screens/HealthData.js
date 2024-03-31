@@ -1,25 +1,100 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { BarChart } from "react-native-chart-kit";
+import { getAuth } from 'firebase/auth';
+import { getFirestore, collection, query, where, getDocs, orderBy} from 'firebase/firestore';
+
+import { initializeApp } from 'firebase/app';
+import {firebaseConfig} from '../firebaseConfig';
+
+
 
 const HealthData = ({ route, navigation }) => {
-    const waterHistoryData = route.params ? route.params.waterHistoryData : [];
-    const calorieHistoryData = route.params ? route.params.calorieHistoryData : [];
+    const [waterHistory, setWaterHistory] = useState([]);
+    const [caloriesHistory, setCaloriesHistory] = useState([]);
 
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    // Get the Auth instance
+    const auth = getAuth();
+
+
+    // Get the currently logged-in user
+    const user = auth.currentUser;
+
+    const userId = user.uid;
+
+
+    useEffect(() => {
+        const fetchIntake = async () => {
+          // Calculate the date 7 days ago
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+          const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+    
+          // Reference to the healthData collection
+          const healthDataRef = collection(db, 'healthData');
+          
+    
+          // Create a query against the collection
+          const q = query(
+            healthDataRef,
+            where('uid', '==', userId),
+            where('date', '>=', sevenDaysAgoStr),
+            orderBy('date', 'asc') 
+          );
+          
+    
+          try {
+            const querySnapshot = await getDocs(q);
+            const waterData = querySnapshot.docs.map(doc => ({
+              date: doc.data().date,
+              waterIntake: doc.data().waterIntake,
+            }));
+            const calorieData = querySnapshot.docs.map(doc => ({
+                date: doc.data().date,
+                calorieIntake: doc.data().calorieIntake,
+            }));
+
+            
+            setWaterHistory(waterData);
+            setCaloriesHistory(calorieData)
+          } catch (error) {
+            
+            console.error("Error fetching water intake data: ", error);
+          }
+        };
+    
+        fetchIntake();
+      }, []); // Effect runs only once on component mount
+
+      
+
+    const transformDates = (HistoryData) => (
+        HistoryData.map(item => {
+            // Split the date string into parts
+            const parts = item.date.split('-');
+            // Rearrange the parts to get "Day/Month"
+            return (parts[2] + "/" + parts[1]);
+        })
+    );
+        
+    
     const waterData = {
-        labels: waterHistoryData.map(item => item.date),
+        labels: transformDates(waterHistory),
+        
         datasets: [
             {
-                data: waterHistoryData.map(item => item.waterIntake),
+                data: waterHistory.map(item => item.waterIntake),
             },
         ],
     };
 
     const calorieData = {
-        labels: calorieHistoryData.map(item => item.date),
+        labels: transformDates(caloriesHistory),
         datasets: [
             {
-                data: calorieHistoryData.map(item => item.calories),
+                data: caloriesHistory.map(item => item.calorieIntake),
             },
         ],
     };
