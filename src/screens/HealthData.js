@@ -1,89 +1,118 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { BarChart } from "react-native-chart-kit";
+import { getFirestore, query, collection, where, getDocs, orderBy, limit } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { initializeApp } from "firebase/app";
+import { firebaseConfig } from "../firebaseConfig";
+import { useFocusEffect } from '@react-navigation/native';
 
-const HealthData = ({ route, navigation }) => {
-    const waterHistoryData = route.params ? route.params.waterHistoryData : [];
-    const calorieHistoryData = route.params ? route.params.calorieHistoryData : [];
+// Initialize Firebase
+initializeApp(firebaseConfig);
+const db = getFirestore();
 
-    const waterData = {
-        labels: waterHistoryData.map(item => item.date),
-        datasets: [
-            {
-                data: waterHistoryData.map(item => item.waterIntake),
-            },
-        ],
+const HealthData = ({ navigation }) => {
+    const [waterHistoryData, setWaterHistoryData] = useState([]);
+    const [calorieHistoryData, setCalorieHistoryData] = useState([]);
+
+    const fetchHealthData = useCallback(async () => {
+        const uid = await AsyncStorage.getItem("userUID");
+        if (!uid) {
+            console.log("User UID not found");
+            return;
+        }
+
+        const today = new Date();
+        today.setDate(today.getDate() - 4); // Adjusted to include today in the 5-day range
+        const dateLimit = today.toISOString().split("T")[0];
+
+        const healthQuery = query(
+            collection(db, "healthData"),
+            where("uid", "==", uid),
+            where("date", ">=", dateLimit),
+            orderBy("date", "asc"),
+            limit(5)
+        );
+
+        try {
+            const querySnapshot = await getDocs(healthQuery);
+            const waterData = [];
+            const calorieData = [];
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                waterData.push({ date: data.date, waterIntake: data.waterIntake || 0 });
+                calorieData.push({ date: data.date, calories: data.calories || 0 });
+            });
+
+            setWaterHistoryData(waterData);
+            setCalorieHistoryData(calorieData);
+        } catch (error) {
+            console.error("Error fetching health data: ", error);
+        }
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchHealthData();
+        }, [fetchHealthData])
+    );
+
+    const formatDate = (dateString) => {
+        const [year, month, day] = dateString.split("-");
+        return `${day}/${month}`;
     };
 
-    const calorieData = {
-        labels: calorieHistoryData.map(item => item.date),
-        datasets: [
-            {
-                data: calorieHistoryData.map(item => item.calories),
-            },
-        ],
+    const chartConfig = {
+        backgroundColor: "#ffffff",
+        backgroundGradientFrom: "#ffffff",
+        backgroundGradientTo: "#ffffff",
+        decimalPlaces: 0,
+        color: (opacity = 1) => `rgba(82, 100, 175, ${opacity})`,
+        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+        style: {
+            borderRadius: 16,
+        },
+        barPercentage: 0.5,
     };
-
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                style={styles.backButton}
-            >
-                <Image
-                    source={require('../image/back.png')}
-                    style={styles.backImage}
-                />
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <Image source={require("../image/back.png")} style={styles.backImage} />
             </TouchableOpacity>
             <Text style={styles.title}>Health Data</Text>
+
             <View style={styles.chartContainer}>
                 <Text style={styles.chartText}>Water Intake History</Text>
                 <BarChart
-                    data={waterData}
+                    data={{
+                        labels: waterHistoryData.map(item => formatDate(item.date)),
+                        datasets: [{ data: waterHistoryData.map(item => item.waterIntake) }],
+                    }}
                     width={350}
                     height={220}
                     yAxisSuffix="ml"
-                    chartConfig={{
-                        backgroundColor: "#ffffff",
-                        backgroundGradientFrom: "#ffffff",
-                        backgroundGradientTo: "#ffffff",
-                        decimalPlaces: 0,
-                        color: (opacity = 1) => `rgba(82, 100, 175, ${opacity})`,
-                        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                        style: {
-                            borderRadius: 16,
-                        },
-                        barPercentage: 0.5,
-                        useShadowColorFromDataset: false,
-                        fillShadowGradient: `rgba(82, 100, 175, 1)`,
-                        fillShadowGradientOpacity: 1,
-                    }}
+                    chartConfig={chartConfig}
+                    fromZero={true}
                 />
             </View>
 
             <View style={styles.chartContainer}>
                 <Text style={styles.calorieChartText}>Calories History</Text>
                 <BarChart
-                    data={calorieData}
+                    data={{
+                        labels: calorieHistoryData.map(item => formatDate(item.date)),
+                        datasets: [{ data: calorieHistoryData.map(item => item.calories) }],
+                    }}
                     width={350}
                     height={220}
-                    yAxisSuffix="ml"
+                    yAxisSuffix=" kcal"
                     chartConfig={{
-                        backgroundColor: "#ffffff",
-                        backgroundGradientFrom: "#ffffff",
-                        backgroundGradientTo: "#ffffff",
-                        decimalPlaces: 0,
-                        color: (opacity = 1) => `rgba(171, 120, 78, ${opacity})`, 
-                        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                        style: {
-                            borderRadius: 16,
-                        },
-                        barPercentage: 0.5,
-                        useShadowColorFromDataset: false,
-                        fillShadowGradient: `rgba(171, 120, 78, 1)`,
-                        fillShadowGradientOpacity: 1,
+                        ...chartConfig,
+                        color: (opacity = 1) => `rgba(171, 120, 78, ${opacity})`,
                     }}
+                    fromZero={true}
                 />
             </View>
         </View>
@@ -120,7 +149,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFF",
         paddingVertical: 20,
         paddingHorizontal: 20,
-        marginTop: 8,
+        marginTop: 50,
         borderRadius: 20,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
@@ -139,10 +168,6 @@ const styles = StyleSheet.create({
         color: '#bcaaa4',
         fontWeight: '600',
         marginBottom: 10,
-    },
-    chartStyle: {
-        marginVertical: 8,
-        borderRadius: 16,
     },
 });
 

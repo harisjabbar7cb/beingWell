@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, TextInput, Alert, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
+import { firebaseConfig } from '../firebaseConfig';
+
+initializeApp(firebaseConfig);
+const db = getFirestore();
 
 const WidgetButton = ({ icon, title, onPress, children }) => (
     <TouchableOpacity style={styles.widget} onPress={onPress}>
@@ -13,82 +20,79 @@ const WidgetButton = ({ icon, title, onPress, children }) => (
         {children}
     </TouchableOpacity>
 );
-const ModuleItem = ({ title, summary }) => (
-    <View style={styles.moduleItem}>
-        <Text style={styles.moduleTitle}>{title}</Text>
-        <Text style={styles.moduleSummary}>{summary}</Text>
-    </View>
-);
-
-const fetchWaterIntakeData = async () => {
-    return [
-        { date: '03/25', waterIntake: 2130 },
-        { date: '03/26', waterIntake: 3310 },
-        { date: '03/27', waterIntake: 3420 },
-        { date: '03/28', waterIntake: 1340 },
-        { date: '03/29', waterIntake: 2340},
-        { date: '03/30', waterIntake: 4530 },
-        { date: '03/31', waterIntake: 4320 },
-    ];
-};
-
-const fetchCalorieData = async () => {
-    return [
-        { date: '03/25', calories: 2130 },
-        { date: '03/26', calories: 2310 },
-        { date: '03/27', calories: 1920 },
-        { date: '03/28', calories: 2340 },
-        { date: '03/29', calories: 2340},
-        { date: '03/30', calories: 1975 },
-        { date: '03/31', calories: 2220 },
-    ];
-};
-
 
 const UserDashboard = ({ navigation }) => {
     const [waterIntake, setWaterIntake] = useState(0);
-    const [waterHistoryData, setwaterHistoryData] = useState([]);
     const [calorieInput, setCalorieInput] = useState('');
     const [totalCalories, setTotalCalories] = useState(0);
-    const [calorieHistoryData, setCalorieData] = useState([]);
-    const [selectedMood, setSelectedMood] = useState('');
 
     useEffect(() => {
-        fetchWaterIntakeData().then(data => {
-            setwaterHistoryData(data);
-        }).catch(error => {
-            console.error("Error fetching data:", error);
-        });
+        const fetchIntakeData = async () => {
+            const uid = await AsyncStorage.getItem('userUID');
+            const today = new Date().toISOString().split('T')[0];
 
-        fetchCalorieData().then(data => {
-            setCalorieData(data);
-        }).catch(error => {
-            console.error("Error fetching data:", error);
-        });
+            const q = query(collection(db, "healthData"), where("uid", "==", uid), where("date", "==", today));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                // Assuming 'waterIntake' and 'calories' are fields in the document
+                setWaterIntake(data.waterIntake || 0);
+                setTotalCalories(data.calories || 0);
+            });
+        };
+
+        fetchIntakeData();
     }, []);
 
-    const incrementWaterIntake = () => {
-        if (waterIntake >= 5000) {
-            Alert.alert("Warning", "You are at risk of overhydration!");
+    const updateIntakeData = async (field, intake) => {
+        const uid = await AsyncStorage.getItem('userUID');
+        const today = new Date().toISOString().split('T')[0];
+        const docRef = doc(collection(db, "healthData"), `${uid}_${today}`);
+        // Prepare data to update
+        const dataToUpdate = {};
+        dataToUpdate[field] = intake;
 
+        await setDoc(docRef, {
+            ...dataToUpdate,
+            uid,
+            date: today,
+        }, { merge: true });
+
+
+        if (field === "waterIntake") {
+            setWaterIntake(intake);
+        } else if (field === "calories") {
+            setTotalCalories(intake);
         }
-        setWaterIntake(waterIntake + 100);
+    };
+
+    const incrementWaterIntake = () => {
+        const newIntake = waterIntake + 100;
+        if (newIntake <= 5000) {
+            updateIntakeData("waterIntake", newIntake);
+        } else {
+            Alert.alert("Warning", "You are at risk of overhydration!");
+        }
     };
 
     const decrementWaterIntake = () => {
-        if (!(waterIntake == 0)) {
-            setWaterIntake(waterIntake - 100);
+        const newIntake = waterIntake - 100;
+        if (newIntake >= 0) {
+            updateIntakeData("waterIntake", newIntake);
+        } else {
+            Alert.alert("Notice", "Water intake cannot be negative.");
         }
-    }
+    };
 
     const handleAddCalories = () => {
         const inputCalories = parseInt(calorieInput, 10);
-        if (isNaN(inputCalories) || inputCalories > 10000 || inputCalories < 0) {
+        if (!isNaN(inputCalories) && inputCalories <= 10000 && inputCalories >= 0) {
+            const newIntake = totalCalories + inputCalories;
+            updateIntakeData("calories", newIntake);
+            setCalorieInput('');
+        } else {
             Alert.alert("Invalid Input", "Please enter a number between 0 and 10,000.");
-            return;
         }
-        setTotalCalories(totalCalories + inputCalories);
-        setCalorieInput('');
     };
 
     return (
@@ -96,7 +100,7 @@ const UserDashboard = ({ navigation }) => {
             <Text style={styles.title}>BeingWell</Text>
             <View style={styles.widgetsContainer}>
 
-                <WidgetButton icon="water" title="" onPress={() => navigation.navigate('HealthData', { waterHistoryData, calorieHistoryData })}>
+                <WidgetButton icon="water" title="" onPress={() => navigation.navigate('HealthData')}>
                     <View style={styles.waterButtonContainer}>
                         <Text style={styles.trackerText}>Water Intake: {waterIntake} ml</Text>
                         <View style={styles.horizontalButtonContainer}>
@@ -112,7 +116,7 @@ const UserDashboard = ({ navigation }) => {
                 </WidgetButton>
 
 
-                <WidgetButton icon="utensils" title="" onPress={() => navigation.navigate('HealthData', {waterHistoryData, calorieHistoryData})}>
+                <WidgetButton icon="utensils" title="" onPress={() => navigation.navigate('HealthData')}>
                     <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1}}>
                         <Text style={[styles.trackerText, {flexShrink: 1}]}>Calories: {totalCalories} kcal</Text>
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
