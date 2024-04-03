@@ -9,7 +9,6 @@ const LearningModules = () => {
 
   const downloadAndOpenFile = async (url, filename) => {
     try {
-      // Downloading the file to the device's file system
       const result = await FileSystem.downloadAsync(
           url,
           FileSystem.documentDirectory + filename

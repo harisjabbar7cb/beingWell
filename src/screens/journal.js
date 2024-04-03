@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Modal, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, collection, query, where, getDocs, addDoc, Timestamp, orderBy } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { firebaseConfig } from '../firebaseConfig';
+
+initializeApp(firebaseConfig);
 
 const JournalPage = () => {
     const navigation = useNavigation();
@@ -9,26 +16,74 @@ const JournalPage = () => {
     const [currentDay, setCurrentDay] = useState('');
     const [dateString, setDateString] = useState('');
     const [historyVisible, setHistoryVisible] = useState(false);
+    const [journalEntries, setJournalEntries] = useState([]);
+
+    const db = getFirestore();
+    const auth = getAuth();
 
     useEffect(() => {
-        // Set the current day of the week and the date
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const now = new Date();
         setCurrentDay(days[now.getDay()]);
         setDateString(now.toLocaleDateString());
     }, []);
 
+    useEffect(() => {
+        const fetchJournalEntries = async () => {
+            const userUID = await AsyncStorage.getItem('userUID');
+            if (userUID) {
+                const q = query(collection(db, 'journalEntries'), where('userId', '==', userUID), orderBy('date', 'desc'));
+                const querySnapshot = await getDocs(q);
+                const entries = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                setJournalEntries(entries);
+            } else {
+                Alert.alert('Error', 'No user ID found. Please log in again.');
+            }
+        };
+
+        fetchJournalEntries();
+    }, []);
+    const fetchJournalEntries = async () => {
+        const userUID = await AsyncStorage.getItem('userUID');
+        if (userUID) {
+            const q = query(collection(db, 'journalEntries'), where('userId', '==', userUID), orderBy('date', 'desc'));
+            const querySnapshot = await getDocs(q);
+            const entries = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            setJournalEntries(entries);
+        } else {
+            Alert.alert('Error', 'No user ID found. Please log in again.');
+        }
+    };
+
     const backB = () => {
         navigation.goBack();
     };
 
-    const submitB = () => {
-        console.log('Text:', text);
-        console.log('Selected Emoji:', selectedEmoji);
-        console.log('Day:', currentDay);
-        // Ideally, here you would also save the journal entry, selected emoji, day, and date to your state or backend for future retrieval.
-        setText('');
-        setSelectedEmoji('');
+    const submitB = async () => {
+        if (!auth.currentUser) {
+            Alert.alert('You must be logged in to submit a journal entry.');
+            return;
+        }
+        if (text.trim() === '' || selectedEmoji === '') {
+            Alert.alert('Please fill in all fields.');
+            return;
+        }
+        const entry = {
+            text: text,
+            emoji: selectedEmoji,
+            day: currentDay,
+            date: Timestamp.fromDate(new Date()),
+            userId: auth.currentUser.uid,
+        };
+        try {
+            await addDoc(collection(db, 'journalEntries'), entry);
+            setText('');
+            setSelectedEmoji('');
+            fetchJournalEntries();
+        } catch (error) {
+            console.error('Error adding document: ', error);
+            Alert.alert('Error', 'Error submitting journal entry.');
+        }
     };
 
     const toggleHistory = () => {
@@ -46,7 +101,7 @@ const JournalPage = () => {
                     <View style={styles.dateEmojiContainer}>
                         <Text style={styles.dayText}>{`${currentDay}, ${dateString}`}</Text>
                         <View style={styles.emojiContainer}>
-                            {['😊', '😐', '😢'].map(emoji => (
+                            {['😊', '😐', '😢'].map((emoji) => (
                                 <TouchableOpacity
                                     key={emoji}
                                     style={[styles.emoji, selectedEmoji === emoji && styles.selectedEmoji]}
@@ -71,18 +126,26 @@ const JournalPage = () => {
                     <Text style={styles.submitButtonText}>Submit</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={toggleHistory} style={styles.historyButton}>
-                    <Text style={styles.historyButtonText}>View History</Text>
+                    <Text style={styles.historyButtonText}>{historyVisible ? 'Hide History' : 'View History'}</Text>
                 </TouchableOpacity>
+                {historyVisible && (
+                    <View style={styles.historyContainer}>
+                        {journalEntries.map((entry) => (
+                            <View key={entry.id} style={styles.entryContainer}>
+                                <Text style={styles.entryDay}>{entry.day}, {entry.date.toDate().toLocaleDateString()}</Text>
+                                <View style={styles.emojiContainer}>
+                                    {['😊', '😐', '😢'].map((emoji) => (
+                                        <Text key={emoji} style={[styles.emoji, entry.emoji === emoji && styles.selectedEmoji]}>
+                                            {emoji}
+                                        </Text>
+                                    ))}
+                                </View>
+                                <Text style={styles.entryText}>{entry.text}</Text>
+                            </View>
+                        ))}
+                    </View>
+                )}
             </ScrollView>
-            <Modal animationType="slide" transparent={false} visible={historyVisible} onRequestClose={toggleHistory}>
-                <View style={styles.historyModal}>
-                    <TouchableOpacity onPress={toggleHistory} style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>Close</Text>
-                    </TouchableOpacity>
-                    {/* Here you would render the history of journal entries and selected emojis */}
-                    <Text style={styles.historyText}>Journal history will be displayed here...</Text>
-                </View>
-            </Modal>
         </View>
     );
 };
@@ -114,7 +177,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     journalContainer: {
-        backgroundColor: '#E8EAF6', // A light shade that stands out against the background
+        backgroundColor: '#E8EAF6',
         borderRadius: 20,
         padding: 15,
         width: '90%',
@@ -195,9 +258,27 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#5264af',
     },
-    historyText: {
-        color: '#5264af',
+    historyScrollView: {
+        width: '100%',
+    },
+    entryContainer: {
+        backgroundColor: '#E8EAF6',
+        borderRadius: 20,
+        padding: 15,
+        top:10,
+        width: '90%',
+        alignSelf: 'center',
+        marginBottom: 20,
+    },
+    entryDay: {
         fontSize: 18,
+        color: '#5264af',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    entryText: {
+        fontSize: 16,
+        marginTop: 10,
     },
 });
 
