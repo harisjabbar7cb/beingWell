@@ -23,7 +23,7 @@ const HealthData = ({ navigation }) => {
         }
 
         const today = new Date();
-        today.setDate(today.getDate() - 4); // Adjusted to include today in the 5-day range
+        today.setDate(today.getDate() - 4);
         const dateLimit = today.toISOString().split("T")[0];
 
         const healthQuery = query(
