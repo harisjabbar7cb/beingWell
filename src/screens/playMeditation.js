@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, View, Text, Dimensions, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { Audio } from 'expo-av';
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import Svg, { Circle, G } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
 const circleSize = screenWidth * 0.8;
@@ -16,12 +17,10 @@ const PlayMeditation = ({ route, navigation }) => {
     const [remainingTime, setRemainingTime] = useState(time * 60);
     const [progress, setProgress] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
-
     const storage = getStorage();
     const combinedAudio = useRef(new Audio.Sound());
-    const isMounted = useRef(true);
-    const timerId = useRef(null);
     const [showBackButton, setShowBackButton] = useState(false);
+
     const ambienceGradients = {
         nature: ['#00441b', '#006d2c', '#238b45'],
         city: ['#0c2461', '#1e3799', '#4a69bd'],
@@ -30,25 +29,28 @@ const PlayMeditation = ({ route, navigation }) => {
         lofiHipHop: ['#4e342e', '#6d4c41', '#8d6e63'],
     };
 
-    useEffect(() => {
-        // Timer to show the back button after 5 seconds
-        const backBtnTimer = setTimeout(() => setShowBackButton(true), 10);
+    useFocusEffect(
+        useCallback(() => {
+            setShowBackButton(false); // Initial state when screen comes into focus
+            const backBtnTimer = setTimeout(() => setShowBackButton(true), 5000);
+            const audioFileName = speaker === 'none' ? `${ambience}` : `${speaker}${ambience}`;
+            loadAndPlayAudio(combinedAudio, `${audioFileName}.mp3`);
 
-        isMounted.current = true;
-        const audioFileName = speaker === 'none' ? `${ambience}` : `${speaker}${ambience}`;
-        loadAndPlayAudio(combinedAudio, `${audioFileName}.mp3`);
-        return () => {
-            isMounted.current = false;
-            clearInterval(timerId.current);
-            clearTimeout(backBtnTimer);
-        };
-    }, []);
+            return () => {
+                clearTimeout(backBtnTimer);
+                if (combinedAudio.current) {
+                    combinedAudio.current.stopAsync();
+                    combinedAudio.current.unloadAsync();
+                }
+            };
+        }, [ambience, speaker])
+    );
 
     const loadAndPlayAudio = async (soundObject, filePath, volume = 1) => {
         try {
             const downloadUrl = await getDownloadURL(ref(storage, filePath));
             await soundObject.current.unloadAsync();
-            const { sound } = await soundObject.current.loadAsync({ uri: downloadUrl }, {}, false);
+            await soundObject.current.loadAsync({ uri: downloadUrl }, {}, false);
             await soundObject.current.setVolumeAsync(volume);
             if (isPlaying) {
                 await soundObject.current.playAsync();
@@ -60,23 +62,20 @@ const PlayMeditation = ({ route, navigation }) => {
 
     useEffect(() => {
         if (isPlaying) {
-            timerId.current = setInterval(() => {
+            const id = setInterval(() => {
                 setRemainingTime((prevTime) => {
                     const newTime = prevTime - 1;
                     setProgress(((time * 60 - newTime) / (time * 60)) * circumference);
                     if (newTime <= 0) {
-                        clearInterval(timerId.current);
+                        clearInterval(id);
                         navigation.goBack();
                     }
                     return Math.max(newTime, 0);
                 });
             }, 1000);
-        } else {
-            clearInterval(timerId.current);
+            return () => clearInterval(id);
         }
-
-        return () => clearInterval(timerId.current);
-    }, [isPlaying]);
+    }, [isPlaying, time]);
 
     const handlePlayPauseToggle = async () => {
         setIsPlaying(!isPlaying);
@@ -91,22 +90,6 @@ const PlayMeditation = ({ route, navigation }) => {
     };
 
     const handleBack = async () => {
-        if (combinedAudio.current) {
-            try {
-                const status = await combinedAudio.current.getStatusAsync();
-                if (status.isLoaded) {
-                    await combinedAudio.current.stopAsync();
-                }
-                await combinedAudio.current.unloadAsync();
-            } catch (error) {
-                console.error("Error stopping audio:", error);
-            }
-        }
-
-        if (timerId.current) {
-            clearInterval(timerId.current);
-        }
-
         navigation.goBack();
     };
 

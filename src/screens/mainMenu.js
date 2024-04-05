@@ -130,8 +130,8 @@ const UserDashboard = ({ navigation }) => {
           onPress={() => navigation.navigate("HealthData")}
         >
           <View style={styles.waterButtonContainer}>
-            <Text style={styles.trackerText}>
-              Water Intake: {waterIntake} ml
+            <Text style={styles.watertrackerText}>
+              Water : {waterIntake} ml
             </Text>
             <View style={styles.horizontalButtonContainer}>
               <TouchableOpacity
@@ -165,7 +165,7 @@ const UserDashboard = ({ navigation }) => {
             }}
           >
             <Text style={[styles.trackerText, { flexShrink: 1 }]}>
-              Calories: {totalCalories} kcal
+              Calories: {totalCalories}
             </Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <TextInput
@@ -250,6 +250,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  watertrackerText: {
+    fontSize: 18,
+    color: "#5264af",
+    fontWeight: "600",
+    right:20,
   },
   incrementButton: {
     flexDirection: "row",
@@ -368,6 +374,7 @@ const styles = StyleSheet.create({
   horizontalButtonContainer: {
     flexDirection: "row",
     alignItems: "center",
+    right:10
   },
   button: {
     backgroundColor: "#E0E0E0",
