@@ -131,7 +131,7 @@ const UserDashboard = ({ navigation }) => {
         >
           <View style={styles.waterButtonContainer}>
             <Text style={styles.watertrackerText}>
-              Water : {waterIntake} ml
+              Water: {waterIntake} ml
             </Text>
             <View style={styles.horizontalButtonContainer}>
               <TouchableOpacity

@@ -31,7 +31,7 @@ const PlayMeditation = ({ route, navigation }) => {
 
     useFocusEffect(
         useCallback(() => {
-            setShowBackButton(false); // Initial state when screen comes into focus
+            setShowBackButton(false);
             const backBtnTimer = setTimeout(() => setShowBackButton(true), 5000);
             const audioFileName = speaker === 'none' ? `${ambience}` : `${speaker}${ambience}`;
             loadAndPlayAudio(combinedAudio, `${audioFileName}.mp3`);

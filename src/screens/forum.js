@@ -17,7 +17,7 @@ const Forum = () => {
             const postsArray = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
             setPosts(postsArray);
         });
-        return () => unsubscribe(); // Cleanup on unmount
+        return () => unsubscribe();
     }, []);
 
     const handlePostCreation = async () => {
@@ -47,7 +47,7 @@ const Forum = () => {
 
     const handleDeletePost = async (postId) => {
         Alert.alert(
-            "Delete Post", // Title of the alert
+            "Delete Post",
             "Are you sure you want to delete this post?",
             [
                 {
@@ -56,7 +56,7 @@ const Forum = () => {
                     style: "cancel"
                 },
                 {
-                    text: "Yes", // Confirmation option
+                    text: "Yes",
                     onPress: async () => {
                         try {
                             await deleteDoc(doc(db, "forum", postId));

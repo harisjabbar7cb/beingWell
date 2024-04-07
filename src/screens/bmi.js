@@ -128,7 +128,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5EEE6',
         alignItems: 'center',
-        justifyContent: 'center',
         paddingTop: 60,
     },
     backButton: {
@@ -152,6 +151,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 20,
         padding: 20,
+        top:100,
         width: '90%',
         elevation: 5,
     },

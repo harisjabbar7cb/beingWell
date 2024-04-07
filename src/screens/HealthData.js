@@ -7,7 +7,6 @@ import { initializeApp } from "firebase/app";
 import { firebaseConfig } from "../firebaseConfig";
 import { useFocusEffect } from '@react-navigation/native';
 
-// Initialize Firebase
 initializeApp(firebaseConfig);
 const db = getFirestore();
 

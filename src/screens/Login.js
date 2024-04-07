@@ -9,7 +9,7 @@ import {firebaseConfig} from '../firebaseConfig';
 import {Image} from 'react-native';
 import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 
-// Initialize Firebaseadmin
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -52,7 +52,6 @@ const Login = () => {
             if (!userQuerySnapshot.empty) {
                 const userDocSnapshot = userQuerySnapshot.docs[0];
                 console.log("User Details: ", userDocSnapshot.data());
-                // Add logic here to store user details as needed
             } else {
                 console.log("No user details found!");
             }

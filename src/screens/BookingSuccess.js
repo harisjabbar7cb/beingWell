@@ -31,20 +31,20 @@ const BookingSuccessPage = ({ route }) => {
                                 return;
                             }
 
-                            // Attempt to find the specific time slot to mark it as available again
-                            const timeSlotRef = doc(db, "available_dates", date, "times", time); // Assuming 'time' can be used as a doc ID
 
-                            // Check if the time slot document exists
+                            const timeSlotRef = doc(db, "available_dates", date, "times", time);
+
+
                             const docSnap = await getDoc(timeSlotRef);
                             if (!docSnap.exists()) {
-                                // If it doesn't exist, create it and mark as available
+
                                 await setDoc(timeSlotRef, { available: true });
                             } else {
-                                // If it exists, just update it to available
+
                                 await updateDoc(timeSlotRef, { available: true });
                             }
 
-                            // Delete the appointment from the appointments collection
+
                             const q = query(collection(db, "appointments"), where("uid", "==", uid), where("date", "==", date), where("time", "==", time));
                             const querySnapshot = await getDocs(q);
                             querySnapshot.forEach(async (document) => {
@@ -52,7 +52,7 @@ const BookingSuccessPage = ({ route }) => {
                             });
 
                             Alert.alert("Booking Cancelled", "Your booking has been successfully cancelled.", [
-                                { text: "OK", onPress: () => navigation.goBack() } // or navigate to a specific screen as needed
+                                { text: "OK", onPress: () => navigation.goBack() }
                             ]);
                         } catch (error) {
                             console.error("Error cancelling booking:", error);
