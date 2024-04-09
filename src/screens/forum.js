@@ -86,10 +86,11 @@ const Forum = () => {
 
             <Text style={styles.title}>Let's Talk</Text>
             <TextInput
-                placeholder="Title"
+                placeholder="Title (max 30 characters)"
                 value={newPostTitle}
                 onChangeText={setNewPostTitle}
                 style={styles.input}
+                maxLength={30}
             />
             <TextInput
                 placeholder="Your message"
