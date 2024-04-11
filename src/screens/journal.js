@@ -80,6 +80,7 @@ const JournalPage = () => {
             setText('');
             setSelectedEmoji('');
             fetchJournalEntries();
+            Alert.alert('Success', 'Your journal entry has been successfully submitted!');
         } catch (error) {
             console.error('Error adding document: ', error);
             Alert.alert('Error', 'Error submitting journal entry.');
