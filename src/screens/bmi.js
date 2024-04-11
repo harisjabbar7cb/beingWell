@@ -12,7 +12,13 @@ const BMI = () => {
     const validateForm = () => {
         if (!age || !height || !weight) {
             Alert.alert('Please enter all fields');
-        } else {
+        }else if (age < 16){
+            Alert.alert('Age must be 16 or above');
+        }else if (height < 139.7 || height > 243.8){
+            Alert.alert('Height must be between 139.7cm and 243.8cm');
+        }else if (weight < 25.4 || weight > 317.5){
+            Alert.alert('Weight must be between 25.4kg and 317.5kg');
+        }else {
             countBmi();
         }
     };
